@@ -8,7 +8,7 @@ Date: 2025-01-06
 """
 
 import sys
-sys.path.insert(0, '/home/cameron/Projects/hypso-package')
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
 
 from hypso import Hypso1
 import os
@@ -106,12 +106,14 @@ for key, group in matched_files.items():
     X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
     Y = np.where(~mask, sentinel_data, np.nan)
 
-    print('min/max values before:')
-    print(np.nanmin(X))
-    print(np.nanmax(X))
+    #print('min/max values before:')
+    #print(np.nanmin(X))
+    #print(np.nanmax(X))
 
-    X = X[~mask][:,6:]
+    X = X[~mask][:,6:-6]
     Y = Y[~mask]
+
+
 
     # Move to loading?
     nan_indices = np.where(np.isnan(X).any(axis=1))[0]
@@ -119,11 +121,20 @@ for key, group in matched_files.items():
     Y = np.delete(Y, nan_indices, axis=0)
 
     #X = (X - np.nanmin(X)) / (np.nanmax(X) - np.nanmin(X))
-    #X = np.clip(X, 0, 1)
+
 
     print('min/max values after:')
     print(np.nanmin(X))
     print(np.nanmax(X))
+
+    X = np.clip(X, 0, 1)
+
+    Y = 10**Y
+    Y = np.clip(Y, 0, 10)
+
+    #print('min/max values after:')
+    #print(np.nanmin(X))
+    #print(np.nanmax(X))
 
 
     print('X & Y shapes:')

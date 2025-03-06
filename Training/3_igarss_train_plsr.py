@@ -8,7 +8,7 @@ Date: 2025-01-06
 """
 
 import sys
-sys.path.insert(0, '/home/cameron/Projects/hypso-package')
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
 
 from hypso import Hypso1
 import os
@@ -46,32 +46,28 @@ dataset_Y_path = os.path.join(output_dir, "dataset_Y.pkl")
 
 
 with open(dataset_X_path, 'rb') as file:
-    X_loaded = pickle.load(file)
+    X = pickle.load(file)
 
 with open(dataset_Y_path, 'rb') as file:
-    Y_loaded = pickle.load(file)
+    Y = pickle.load(file)
 
 components = 10
 
-X = X_loaded
-Y = Y_loaded # chl_nn is log values, reverse
-#Y = 10**Y_loaded # chl_nn is log values, reverse
-#Y = np.clip(Y, 0, None)
 
-        
 
 print("Running with " + str(components) + " components.")
 
 pls = PLSRegression(n_components=components, max_iter=500)
-#scoring = ['explained_variance', 'r2', 'neg_mean_squared_error', 'neg_root_mean_squared_error']
-#cv = KFold(n_splits=10, shuffle=True)
-#scores = cross_validate(pls, X, Y, cv=cv, scoring=scoring, return_indices=True)
+##scoring = ['explained_variance', 'r2', 'neg_mean_squared_error', 'neg_root_mean_squared_error']
+##cv = KFold(n_splits=10, shuffle=True)
+##scores = cross_validate(pls, X, Y, cv=cv, scoring=scoring, return_indices=True)
 
-#print(scores)
+##print(scores)
 
 pls.fit(X,Y)
 pls_model_path = os.path.join(output_dir, "pls_model_c" + str(components) + ".pkl")
 with open(pls_model_path, 'wb') as file:
     pickle.dump(pls, file)
+
 
 

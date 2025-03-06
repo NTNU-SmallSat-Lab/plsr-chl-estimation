@@ -110,7 +110,7 @@ for entry in entry_list:
     plt.imshow(satobj.l1a_cube[:,:,40], interpolation='nearest')
     plt.savefig('l1a_greyscale.png')
 
-    input("Pause...")
+    #input("Pause...")
 
     satobj.generate_l1b_cube()
     satobj.generate_l1c_cube()
@@ -119,7 +119,7 @@ for entry in entry_list:
     plt.imshow(satobj.l1d_cube[:,:,40], interpolation='nearest')
     plt.savefig('l1d_greyscale.png')
 
-    input("Pause...")
+    #input("Pause...")
 
     satobj.run_indirect_georeferencing(points_file_path=points_file)
 
@@ -138,7 +138,7 @@ for entry in entry_list:
     plt.savefig('longitudes.png')
 
 
-    input("Pause...")
+    #input("Pause...")
 
     filenames = []
     filenames = filenames + glob.glob(sentinel_path + '/geo_coordinates.nc')
@@ -147,7 +147,7 @@ for entry in entry_list:
     sentinel_scene = Scene(filenames=filenames, reader='olci_l2')
     sentinel_scene.load(['chl_nn', 'mask'])
 
-    input("Pause...")
+    #input("Pause...")
 
 
     resampled_sentinel_scene = sentinel_scene.resample(swath_def, resampler='nearest', fill_value=np.nan)
@@ -161,7 +161,7 @@ for entry in entry_list:
     plt.imshow(resampled_sentinel, interpolation='nearest')
     plt.savefig('chl_nn.png')
 
-    input("Pause...")
+    #input("Pause...")
 
 
     basename = satobj.capture_name
