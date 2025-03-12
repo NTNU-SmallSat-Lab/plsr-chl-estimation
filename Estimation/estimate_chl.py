@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
+
 import os
 import sys
 import pickle
+import numpy as np
+from matplotlib import pyplot as plt
 
 from pathlib import Path
+
 from hypso import Hypso1
-
 from hypso.write import write_l1c_nc_file
-from hypso.write import write_products_nc_file
-
 from hypso.classification import decode_jon_cnn_water_mask, decode_jon_cnn_land_mask, decode_jon_cnn_cloud_mask
+from hypso.resample import resample_dataarray_kd_tree_nearest
 
 import netCDF4 as nc
 from pyresample.geometry import SwathDefinition
 
+from global_land_mask import globe
+
+
 PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
+
 
 
 def main(l1a_nc_path, labels_path, dst_path, points_path=None):
@@ -46,11 +54,10 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     satobj.generate_l1c_cube()
     satobj.generate_l1d_cube()
 
-    #write_l1c_nc_file(satobj, overwrite=True, datacube=False)
-
-    X = satobj.l1d_cube[:,:,6:]
+    # Generate PLSR estimates
+    X = satobj.l1d_cube[:,:,6:-6]
     X_dims = X.shape
-    X = X.to_numpy().reshape(-1,114)
+    X = X.to_numpy().reshape(-1,108)
 
     with open(PLS_MODEL_PATH, 'rb') as file:
         pls = pickle.load(file)
@@ -59,21 +66,37 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     Y = Y.reshape(X_dims[0], X_dims[1], -1)
     Y = Y[:,:,0]
 
+    Y = np.clip(Y, 0, 10)
 
-    chl_hypso = 10**Y
+    chl_hypso = Y
 
     # TODO: Apply masks
-    #land_mask = decode_jon_cnn_land_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
-    #cloud_mask = decode_jon_cnn_cloud_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
+    land_mask = decode_jon_cnn_land_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
+    cloud_mask = decode_jon_cnn_cloud_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
+
+    mask = cloud_mask | land_mask
+
+    chl_hypso[mask] = np.nan
+
+    plt.imshow(mask)
+    plt.savefig('./mask.png')
+    plt.close()
 
 
     # Run indirect georeferencing
     if points_path is not None:
         try:
-            satobj.run_indirect_georeferencing(points_file_path=points_path)
+            satobj.run_indirect_georeferencing(points_file_path=points_path, flip=True)
+
+            lats = satobj.latitudes_indirect
+            lons = satobj.longitudes_indirect
+
         except Exception as ex:
             print(ex)
             print('Indirect georeferencing has failed. Defaulting to direct georeferencing.')
+
+            lats = satobj.latitudes
+            lons = satobj.longitudes
 
     # Load midnor grid, create swath
     with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
@@ -83,26 +106,70 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     target_swath = SwathDefinition(lons=grid_longitudes, lats=grid_latitudes)
 
 
+
     # Resample to midnor grid (nearest)
-    from hypso.resample import resample_dataarray_kd_tree_nearest
-
-
-    # TODO: add check for indirect or direct lat/lons
-    resampled_chl_hypso = resample_dataarray_kd_tree_nearest(area_def=target_swath, 
+    chl_hypso = resample_dataarray_kd_tree_nearest(area_def=target_swath, 
                                     data=chl_hypso,
-                                    latitudes=satobj.latitudes_indirect,
-                                    longitudes=satobj.longitudes_indirect
+                                    latitudes=lats,
+                                    longitudes=lons
                             )
 
-    # TODO: Write to NetCDF (use spring 2024 NetCDF writer)
-    #write_products_nc_file(satobj=satobj, file_name="./chl.nc", overwrite=True)
 
 
-    write_nc(dst_path='./chlor_a.nc', 
-             )
+    # Apply grid land mask
+    #grid_land_mask = np.empty(grid_longitudes.shape)
+
+    grid_x_dim, grid_y_dim = grid_longitudes.shape
+
+    for x_idx in range(0,grid_x_dim):
+        for y_idx in range(0,grid_y_dim):
+    
+            grid_lat = grid_latitudes[x_idx, y_idx]
+            grid_lon = grid_longitudes[x_idx, y_idx]
+
+            if globe.is_land(grid_lat, grid_lon):
+                chl_hypso[x_idx, y_idx] = np.nan
 
 
-def write_nc(dst_path, chl, lats, lons, ):
+
+
+    # Get ADCS timestamps 
+    #adcssamples = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
+
+    timestamps = getattr(satobj, 'nc_adcs_vars')["timestamps"]
+
+
+    # Write to NetCDF 
+    write_nc(dst_path='./test_chlor_a.nc', chl=chl_hypso, lats=grid_latitudes, lons=grid_longitudes, timestamps=timestamps)
+
+    plt.imshow(chl_hypso)
+    plt.savefig('./out.png')
+
+
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    plt.figure(figsize=(16, 8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([np.min(grid_longitudes), np.max(grid_longitudes), np.min(grid_latitudes), np.max(grid_latitudes)], crs=ccrs.PlateCarree())
+    # Plot the resampled data
+    mesh = ax.pcolormesh(grid_longitudes, grid_latitudes, chl_hypso, shading='auto', cmap='viridis', transform=ccrs.PlateCarree())
+
+    # Add basemap 
+    ax.coastlines(resolution='10m', linewidth=1)
+    ax.add_feature(cfeature.BORDERS, linestyle=':')
+    ax.add_feature(cfeature.LAND, facecolor='lightgray')
+    ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+
+    # Add colorbar and labels
+    plt.colorbar(mesh, ax=ax, orientation='vertical', label='Chlorophyll-a (mg/m^3)')
+    plt.title('Resampled HYPSO-1 Chlorophyll-a Concentration')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+
+    plt.savefig('./out_dectorated.png')    
+
+
+def write_nc(dst_path, chl, lats, lons, timestamps):
 
     COMP_SCHEME = 'zlib'  # Default: zlib
     COMP_LEVEL = 4  # Default (when scheme != none): 4
@@ -122,19 +189,6 @@ def write_nc(dst_path, chl, lats, lons, ):
         netfile.createDimension('y', yc)
         netfile.createDimension('x', xc)
 
-
-        chlor_a = netfile.createVariable(
-            'chlor_a', 'f8',
-            ('y','x'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        chlor_a.long_name = "chlor_a"
-        chlor_a.units = "mg/m^3" # TODO: check units
-        chlor_a.coordinates = "latitude longitude"
-        chlor_a[:] = chl
-
         latitude = netfile.createVariable(
             'latitude', 'f8',
             ('y','x'),
@@ -142,7 +196,7 @@ def write_nc(dst_path, chl, lats, lons, ):
             complevel=COMP_LEVEL,
             shuffle=COMP_SHUFFLE
         )
-        latitude.name = "latitude"
+        #latitude.name = "latitude"
         latitude.standard_name = "latitude"
         latitude.units = "degrees_north"
         latitude[:] = lats
@@ -155,13 +209,55 @@ def write_nc(dst_path, chl, lats, lons, ):
             complevel=COMP_LEVEL,
             shuffle=COMP_SHUFFLE
         )
-        longitude.name = "longitude"
+        #longitude.name = "longitude"
         longitude.standard_name = "longitude"
         longitude.units = "degrees_north"
         longitude[:] = lons
 
+
+        chlor_a = netfile.createVariable(
+            'chlor_a', 'f8',
+            ('y','x'),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+        chlor_a.standard_name = "chlor_a"
+        chlor_a.units = "mg/m^3" # TODO: check units
+        chlor_a[:] = chl
+
+
+        netfile.createDimension('adcssamples', len(timestamps))
+
+        ts = netfile.createVariable(
+            'timestamps', 'f8',
+            ('adcssamples',),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+
+        ts[:] = timestamps
+
+        '''
+        # ADCS Timestamps ----------------------------------------------------
+        len_timestamps = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
+        netfile.createDimension('adcssamples', len_timestamps)
+
+        meta_adcs_timestamps = netfile.createVariable(
+            'metadata/adcs/timestamps', 'f8',
+            ('adcssamples',),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+
+        meta_adcs_timestamps[:] = getattr(satobj, 'nc_adcs_vars')["timestamps"][:]
+        '''
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
+    if len(sys.argv) < 4 or len(sys.argv) > 5:
         print("Usage: python script.py <path_to_l1a_nc> <path_to_cnn_labels> <chl_nc_dst> [path_to_points_file]")
         sys.exit(1)
 
