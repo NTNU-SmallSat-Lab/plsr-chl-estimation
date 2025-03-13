@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
+#import sys
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
 
 import os
 import sys
@@ -24,8 +24,6 @@ from global_land_mask import globe
 
 PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
-
-
 
 def main(l1a_nc_path, labels_path, dst_path, points_path=None):
 
@@ -78,9 +76,9 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
 
     chl_hypso[mask] = np.nan
 
-    plt.imshow(mask)
-    plt.savefig('./mask.png')
-    plt.close()
+    #plt.imshow(mask)
+    #plt.savefig('./mask.png')
+    #plt.close()
 
 
     # Run indirect georeferencing
@@ -142,10 +140,10 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     # Write to NetCDF 
     write_nc(dst_path='./test_chlor_a.nc', chl=chl_hypso, lats=grid_latitudes, lons=grid_longitudes, timestamps=timestamps)
 
-    plt.imshow(chl_hypso)
-    plt.savefig('./out.png')
+    #plt.imshow(chl_hypso)
+    #plt.savefig('./out.png')
 
-
+    '''
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     plt.figure(figsize=(16, 8))
@@ -166,7 +164,8 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
 
-    plt.savefig('./out_dectorated.png')    
+    plt.savefig('./out_dectorated.png')   
+    ''' 
 
 
 def write_nc(dst_path, chl, lats, lons, timestamps):
