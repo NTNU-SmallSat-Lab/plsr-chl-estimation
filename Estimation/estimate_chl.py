@@ -25,7 +25,7 @@ from global_land_mask import globe
 PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
 
-def main(l1a_nc_path, labels_path, dst_path, points_path=None):
+def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
 
     if not os.path.isfile(l1a_nc_path):
@@ -36,8 +36,12 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
         print(f"Error: The file '{labels_path}' does not exist.")
         return
     
-    if points_path is not None and not os.path.isfile(points_path):
-        print(f"Error: The file '{points_path}' does not exist.")
+    if lats_path is not None and not os.path.isfile(lats_path):
+        print(f"Error: The file '{lats_path}' does not exist.")
+        return
+    
+    if lons_path is not None and not os.path.isfile(lons_path):
+        print(f"Error: The file '{lons_path}' does not exist.")
         return
     
 
@@ -68,6 +72,10 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
 
     chl_hypso = Y
 
+    #plt.imshow(chl_hypso)
+    #plt.savefig('./chl_hypso.png')
+    #plt.close()
+
     # TODO: Apply masks
     land_mask = decode_jon_cnn_land_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
     cloud_mask = decode_jon_cnn_cloud_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
@@ -80,21 +88,57 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     #plt.savefig('./mask.png')
     #plt.close()
 
+    #plt.imshow(chl_hypso)
+    #plt.savefig('./chl_hypso_masked.png')
+    #plt.close()
+
 
     # Run indirect georeferencing
-    if points_path is not None:
+    if lats_path is not None and lons_path is not None:
         try:
-            satobj.run_indirect_georeferencing(points_file_path=points_path, flip=True)
 
-            lats = satobj.latitudes_indirect
-            lons = satobj.longitudes_indirect
+            with open(lats_path, mode='rb') as file:
+                file_content = file.read()
+            
+            lats = np.frombuffer(file_content, dtype=np.float32)
+
+            lats = lats.reshape(satobj.spatial_dimensions)
+
+            with open(lons_path, mode='rb') as file:
+                file_content = file.read()
+            
+            lons = np.frombuffer(file_content, dtype=np.float32)
+  
+            lons = lons.reshape(satobj.spatial_dimensions)
+
+            #satobj.run_indirect_georeferencing(points_file_path=points_path, flip=False)
+
+            #lats = satobj.latitudes_indirect
+            #lons = satobj.longitudes_indirect
 
         except Exception as ex:
             print(ex)
             print('Indirect georeferencing has failed. Defaulting to direct georeferencing.')
 
+            satobj.run_direct_georeferencing()
+
             lats = satobj.latitudes
             lons = satobj.longitudes
+
+    else:
+        satobj.run_direct_georeferencing()
+
+        lats = satobj.latitudes
+        lons = satobj.longitudes
+
+    #plt.imshow(lats)
+    #plt.savefig('./lats.png')
+    #plt.close()
+
+    #plt.imshow(lons)
+    #plt.savefig('./lons.png')
+    #plt.close()
+
 
     # Load midnor grid, create swath
     with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
@@ -142,6 +186,7 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
 
     #plt.imshow(chl_hypso)
     #plt.savefig('./out.png')
+    #plt.close()
 
     '''
     import cartopy.crs as ccrs
@@ -165,7 +210,7 @@ def main(l1a_nc_path, labels_path, dst_path, points_path=None):
     plt.ylabel('Latitude')
 
     plt.savefig('./out_dectorated.png')   
-    ''' 
+    '''
 
 
 def write_nc(dst_path, chl, lats, lons, timestamps):
@@ -256,8 +301,8 @@ def write_nc(dst_path, chl, lats, lons, timestamps):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4 or len(sys.argv) > 5:
-        print("Usage: python script.py <path_to_l1a_nc> <path_to_cnn_labels> <chl_nc_dst> [path_to_points_file]")
+    if len(sys.argv) < 4 or len(sys.argv) > 6:
+        print("Usage: python script.py <path_to_l1a_nc> <path_to_cnn_labels> <chl_nc_dst> [path_to_lats_file] [path_to_lons_file]")
         sys.exit(1)
 
     l1a_nc_path = sys.argv[1]
@@ -266,8 +311,11 @@ if __name__ == "__main__":
 
     dst_path = sys.argv[3]
 
-    points_path = sys.argv[4] if len(sys.argv) == 5 else None
+    #points_path = sys.argv[4] if len(sys.argv) == 5 else None
 
-    main(l1a_nc_path, labels_path, dst_path, points_path)
+    lats_path = sys.argv[4] if len(sys.argv) == 6 else None
+    lons_path = sys.argv[5] if len(sys.argv) == 6 else None
+
+    main(l1a_nc_path, labels_path, dst_path, lats_path, lons_path)
 
 
