@@ -25,6 +25,8 @@ from global_land_mask import globe
 PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
 
+PRODUCE_FIGURES = True
+
 def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
 
@@ -72,9 +74,10 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
     chl_hypso = Y
 
-    #plt.imshow(chl_hypso)
-    #plt.savefig('./chl_hypso.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(chl_hypso)
+        plt.savefig('./chl_hypso.png')
+        plt.close()
 
     # TODO: Apply masks
     land_mask = decode_jon_cnn_land_mask(file_path=labels_path, spatial_dimensions=satobj.spatial_dimensions)
@@ -84,13 +87,39 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
     chl_hypso[mask] = np.nan
 
-    #plt.imshow(mask)
-    #plt.savefig('./mask.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(mask)
+        plt.savefig('./mask.png')
+        plt.close()
 
-    #plt.imshow(chl_hypso)
-    #plt.savefig('./chl_hypso_masked.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(chl_hypso)
+        plt.savefig('./chl_hypso_masked.png')
+        plt.close()
+
+
+    cut_off = 10
+    radius = 20
+    temp = chl_hypso
+    indexes = np.where(temp > cut_off)
+    mask = cloud_mask
+    for row, col in zip(indexes[0], indexes[1]):    
+        # Define search boundaries
+        row_start, row_end = max(0, row - radius), min(mask.shape[0], row + radius + 1)
+        col_start, col_end = max(0, col - radius), min(mask.shape[1], col + radius + 1)
+        
+        # Check and modify if there's a 1 in the surrounding area
+        nearby_area = mask[row_start:row_end, col_start:col_end]
+        if np.any(nearby_area == 1):
+            temp[row, col] = np.nan
+
+
+    chl_hypso = temp
+
+    if PRODUCE_FIGURES:
+        plt.imshow(chl_hypso)
+        plt.savefig('./chl_hypso_expanded_masked.png')
+        plt.close()
 
 
     # Run indirect georeferencing
@@ -131,13 +160,15 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
         lats = satobj.latitudes
         lons = satobj.longitudes
 
-    #plt.imshow(lats)
-    #plt.savefig('./lats.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(lats)
+        plt.savefig('./lats.png')
+        plt.close()
 
-    #plt.imshow(lons)
-    #plt.savefig('./lons.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(lons)
+        plt.savefig('./lons.png')
+        plt.close()
 
 
     # Load midnor grid, create swath
@@ -184,33 +215,33 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
     # Write to NetCDF 
     write_nc(dst_path='./test_chlor_a.nc', chl=chl_hypso, lats=grid_latitudes, lons=grid_longitudes, timestamps=timestamps)
 
-    #plt.imshow(chl_hypso)
-    #plt.savefig('./out.png')
-    #plt.close()
+    if PRODUCE_FIGURES:
+        plt.imshow(chl_hypso)
+        plt.savefig('./out.png')
+        plt.close()
 
-    '''
-    import cartopy.crs as ccrs
-    import cartopy.feature as cfeature
-    plt.figure(figsize=(16, 8))
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_extent([np.min(grid_longitudes), np.max(grid_longitudes), np.min(grid_latitudes), np.max(grid_latitudes)], crs=ccrs.PlateCarree())
-    # Plot the resampled data
-    mesh = ax.pcolormesh(grid_longitudes, grid_latitudes, chl_hypso, shading='auto', cmap='viridis', transform=ccrs.PlateCarree())
+    if PRODUCE_FIGURES:
+        import cartopy.crs as ccrs
+        import cartopy.feature as cfeature
+        plt.figure(figsize=(16, 8))
+        ax = plt.axes(projection=ccrs.PlateCarree())
+        ax.set_extent([np.min(grid_longitudes), np.max(grid_longitudes), np.min(grid_latitudes), np.max(grid_latitudes)], crs=ccrs.PlateCarree())
+        # Plot the resampled data
+        mesh = ax.pcolormesh(grid_longitudes, grid_latitudes, chl_hypso, shading='auto', cmap='viridis', transform=ccrs.PlateCarree())
 
-    # Add basemap 
-    ax.coastlines(resolution='10m', linewidth=1)
-    ax.add_feature(cfeature.BORDERS, linestyle=':')
-    ax.add_feature(cfeature.LAND, facecolor='lightgray')
-    ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+        # Add basemap 
+        ax.coastlines(resolution='10m', linewidth=1)
+        ax.add_feature(cfeature.BORDERS, linestyle=':')
+        ax.add_feature(cfeature.LAND, facecolor='lightgray')
+        ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
 
-    # Add colorbar and labels
-    plt.colorbar(mesh, ax=ax, orientation='vertical', label='Chlorophyll-a (mg/m^3)')
-    plt.title('Resampled HYPSO-1 Chlorophyll-a Concentration')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
+        # Add colorbar and labels
+        plt.colorbar(mesh, ax=ax, orientation='vertical', label='Chlorophyll-a (mg/m^3)')
+        plt.title('Resampled HYPSO-1 Chlorophyll-a Concentration')
+        plt.xlabel('Longitude')
+        plt.ylabel('Latitude')
 
-    plt.savefig('./out_dectorated.png')   
-    '''
+        plt.savefig('./out_dectorated.png')   
 
 
 def write_nc(dst_path, chl, lats, lons, timestamps):
