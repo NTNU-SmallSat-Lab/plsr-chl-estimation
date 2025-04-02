@@ -25,7 +25,7 @@ from global_land_mask import globe
 PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
 
-PRODUCE_FIGURES = True
+PRODUCE_FIGURES = False
 
 def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
@@ -297,7 +297,7 @@ def write_nc(dst_path, chl, lats, lons, timestamps):
             complevel=COMP_LEVEL,
             shuffle=COMP_SHUFFLE
         )
-        chlor_a.standard_name = "chlor_a"
+        chlor_a.standard_name = "chl_a"
         chlor_a.units = "mg/m^3" # TODO: check units
         chlor_a[:] = chl
 
