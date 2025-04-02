@@ -181,13 +181,11 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
 
     # Resample to midnor grid (nearest)
-    chl_hypso = resample_dataarray_kd_tree_nearest(area_def=target_swath, 
-                                    data=chl_hypso,
-                                    latitudes=lats,
-                                    longitudes=lons
-                            )
-
-
+    chl_hypso_resampled = resample_dataarray_kd_tree_nearest(area_def=target_swath,
+                                                             data=chl_hypso,
+                                                             latitudes=lats,
+                                                             longitudes=lons
+                                                             )
 
     # Apply grid land mask
     #grid_land_mask = np.empty(grid_longitudes.shape)
@@ -201,7 +199,7 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
             grid_lon = grid_longitudes[x_idx, y_idx]
 
             if globe.is_land(grid_lat, grid_lon):
-                chl_hypso[x_idx, y_idx] = np.nan
+                chl_hypso_resampled[x_idx, y_idx] = np.nan
 
 
 
@@ -213,10 +211,10 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
 
     # Write to NetCDF 
-    write_nc(dst_path='./test_chlor_a.nc', chl=chl_hypso, lats=grid_latitudes, lons=grid_longitudes, timestamps=timestamps)
+    write_nc(dst_path=dst_path, chl=chl_hypso_resampled, lats=grid_latitudes, lons=grid_longitudes, timestamps=timestamps)
 
     if PRODUCE_FIGURES:
-        plt.imshow(chl_hypso)
+        plt.imshow(chl_hypso_resampled)
         plt.savefig('./out.png')
         plt.close()
 
@@ -227,7 +225,7 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
         ax = plt.axes(projection=ccrs.PlateCarree())
         ax.set_extent([np.min(grid_longitudes), np.max(grid_longitudes), np.min(grid_latitudes), np.max(grid_latitudes)], crs=ccrs.PlateCarree())
         # Plot the resampled data
-        mesh = ax.pcolormesh(grid_longitudes, grid_latitudes, chl_hypso, shading='auto', cmap='viridis', transform=ccrs.PlateCarree())
+        mesh = ax.pcolormesh(grid_longitudes, grid_latitudes, chl_hypso_resampled, shading='auto', cmap='viridis', transform=ccrs.PlateCarree())
 
         # Add basemap 
         ax.coastlines(resolution='10m', linewidth=1)
@@ -241,7 +239,9 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
         plt.xlabel('Longitude')
         plt.ylabel('Latitude')
 
-        plt.savefig('./out_dectorated.png')   
+        plt.savefig('./out_decorated.png')
+
+    return chl_hypso, chl_hypso_resampled
 
 
 def write_nc(dst_path, chl, lats, lons, timestamps):
