@@ -291,7 +291,7 @@ def write_nc(dst_path, chl, lats, lons, timestamps):
 
 
         chlor_a = netfile.createVariable(
-            'chlor_a', 'f8',
+            'chl_a', 'f8',
             ('y','x'),
             compression=COMP_SCHEME,
             complevel=COMP_LEVEL,
