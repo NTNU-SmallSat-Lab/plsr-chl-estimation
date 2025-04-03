@@ -39,7 +39,7 @@ from collections import defaultdict
 
 script_dir = os.getcwd()
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, "dataset")
+output_dir = os.path.join(script_dir, "dataset_h2")
 
 dataset_X_path = os.path.join(output_dir, "dataset_X.pkl")
 dataset_Y_path = os.path.join(output_dir, "dataset_Y.pkl")

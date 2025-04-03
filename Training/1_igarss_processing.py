@@ -36,45 +36,78 @@ def read_csv(file_path):
         for row in csv_reader:
             if len(row) >= 3:
                 entry_dict = {}
+                entry_dict['enable'] = row[0].lower() == 'true'
+                entry_dict['hypso'] = row[1]
+                entry_dict['sentinel'] = row[2]
+                entry_dict['points'] = row[3]
+                entry_dict['lats'] = row[4]
+                entry_dict['lons'] = row[5]
+                entry_dict['flip'] = row[6].lower() == 'true'
 
-                entry_dict['hypso'] = row[0]
-                entry_dict['sentinel'] = row[1]
-                entry_dict['flip'] = row[2].lower() == 'true'
                 data_list.append(entry_dict)
 
     return data_list
 
 
-captures_csv_path = './captures.csv'
+
+
+sensor = "h2" # h1 or h2
+
+captures_csv_path = './captures_' + sensor + '.csv'
 
 entry_list = read_csv(captures_csv_path)
 points_file_base_dir = "/home/cameron/Projects/hypso1-qgis-gcps/png/bin3"
 
-area_def = load_area("./frohavet.yaml")
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, "dataset")
+
+
+output_dir = os.path.join(script_dir, "dataset_" + sensor)
 
 for entry in entry_list:
+
+    print('Processing capture:')
+    print(entry['hypso'])
+
+    if not entry['enable']:
+        print('Capture not enabled. Skipping.')
+        continue
 
     hypso_path = entry['hypso']
     sentinel_path = entry['sentinel']
 
     parts = hypso_path.rstrip('/').split('/')
+
+    print(parts)
+
     capture_target_name = parts[-2]
+
+    print(capture_target_name)
+
     timestamp = parts[-1].split('_')[1]
 
     base_labels_path = os.path.join(hypso_path, "processing-temp")
+
+    print(base_labels_path)
 
     for item in os.listdir(base_labels_path):
         if os.path.isdir(os.path.join(base_labels_path, item)) and item.startswith(capture_target_name):
             subdir_name = item
             break
 
-    labels_path = os.path.join(base_labels_path, subdir_name, "jon-cnn.labels")
+    if sensor == 'h1':
+        labels_path = os.path.join(base_labels_path, "jon-cnn.labels")
+    else:
+        labels_path = os.path.join(base_labels_path, "sea-land-cloud.labels")
+
+
+
+
+
     dt = datetime.strptime(timestamp, "%Y-%m-%dT%H-%M-%SZ")
     new_timestamp = dt.strftime("%Y-%m-%d_%H%MZ")
+
     points_file = os.path.join(points_file_base_dir, capture_target_name, f"{capture_target_name}_{new_timestamp}-bin3.points")
+
 
     name = f"{capture_target_name}_{timestamp}-l1a"
     l1a_nc_file = os.path.join(hypso_path, name + '.nc')
@@ -121,7 +154,30 @@ for entry in entry_list:
 
     #input("Pause...")
 
-    satobj.run_indirect_georeferencing(points_file_path=points_file)
+
+    if entry['lats'] and entry['lons']:
+
+        # Read from latitudes_indirectgeoref.dat
+        with open(entry['lats'], mode='rb') as file:
+            file_content = file.read()
+        
+        lats = np.frombuffer(file_content, dtype=np.float32)
+
+        lats = lats.reshape(satobj.spatial_dimensions)
+
+        # Read from longitudes_indirectgeoref.dat
+        with open(entry['lons'], mode='rb') as file:
+            file_content = file.read()
+        
+        lons = np.frombuffer(file_content, dtype=np.float32)
+
+        lons = lons.reshape(satobj.spatial_dimensions)
+
+        # Directly provide the indirect lat/lons loaded from the file. This function will run the track geometry computations.
+        satobj.run_indirect_georeferencing(latitudes=lats, longitudes=lons)
+
+    else:
+        satobj.run_indirect_georeferencing(points_file_path=points_file)
 
     swath_def = generate_hypso_swath_def(satobj, use_indirect_georef=True)
 

@@ -35,7 +35,7 @@ from collections import defaultdict
 
 script_dir = os.getcwd()
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, "dataset")
+output_dir = os.path.join(script_dir, "dataset_h2")
 
 # Dictionary to store matched files
 matched_files = defaultdict(list)
