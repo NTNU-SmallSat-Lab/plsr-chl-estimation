@@ -22,7 +22,11 @@ from pyresample.geometry import SwathDefinition
 from global_land_mask import globe
 
 
-PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Training/dataset/pls_model_c10.pkl'
+H1_PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Estimation/pls_model_c10_h1.pkl'
+H2_PLS_MODEL_PATH = '/home/cameron/Projects/plsr-chl-estimation/Estimation/pls_model_c10_h2.pkl'
+
+PLS_MODEL = H1_PLS_MODEL_PATH
+
 MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
 
 PRODUCE_FIGURES = False
@@ -58,12 +62,23 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
     satobj.generate_l1c_cube()
     satobj.generate_l1d_cube()
 
+
+    if satobj.sensor == 'hypso1_hsi':
+        pls_model = H1_PLS_MODEL_PATH
+    elif satobj.sensor == 'hypso2_hsi':
+        pls_model = H2_PLS_MODEL_PATH
+    else:
+        exit()
+
+
+
+
     # Generate PLSR estimates
     X = satobj.l1d_cube[:,:,6:-6]
     X_dims = X.shape
     X = X.to_numpy().reshape(-1,108)
 
-    with open(PLS_MODEL_PATH, 'rb') as file:
+    with open(pls_model, 'rb') as file:
         pls = pickle.load(file)
 
     Y = pls.predict(X)
