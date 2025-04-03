@@ -71,8 +71,6 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
         exit()
 
 
-
-
     # Generate PLSR estimates
     X = satobj.l1d_cube[:,:,6:-6]
     X_dims = X.shape
