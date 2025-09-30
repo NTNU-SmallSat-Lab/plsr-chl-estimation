@@ -44,25 +44,14 @@ for entry in os.listdir(base_dir):
 
     # Load the data
 
-    ## Load the HYPSO data
-    satobj = Hypso(path=l1d_nc_path, verbose=True)
-    hypso_data = satobj.l1d_cube.to_numpy()
+    try:
 
-    # Load the HYPSO mask
-    with Dataset(slc_nc_path, "r") as ncfile:
-        # Read dimensions
-        y_dim = ncfile.dimensions["y"].size
-        x_dim = ncfile.dimensions["x"].size
+        ## Load the HYPSO data
+        satobj = Hypso(path=l1d_nc_path, verbose=True)
+        hypso_data = satobj.l1d_cube.to_numpy()
 
-        # Read variables
-        lats = ncfile.variables["lat"][:, :]
-        lons = ncfile.variables["lon"][:, :]
-        hypso_mask = ncfile.variables["water"][:, :]
-
-    # Load the Sentinel data and mask
-    for i, sentinel_nc_path in enumerate(sentinel_nc_paths):
-
-        with Dataset(sentinel_nc_path, "r") as ncfile:
+        # Load the HYPSO mask
+        with Dataset(slc_nc_path, "r") as ncfile:
             # Read dimensions
             y_dim = ncfile.dimensions["y"].size
             x_dim = ncfile.dimensions["x"].size
@@ -70,53 +59,70 @@ for entry in os.listdir(base_dir):
             # Read variables
             lats = ncfile.variables["lat"][:, :]
             lons = ncfile.variables["lon"][:, :]
-            sentinel_chl = ncfile.variables["chl_nn"][:, :]
-            sentinel_mask = ncfile.variables["mask"][:, :]
+            hypso_mask = ncfile.variables["water"][:, :]
 
-        mask = sentinel_mask.astype(bool) | ~hypso_mask.astype(bool)
+        # Load the Sentinel data and mask
+        for i, sentinel_nc_path in enumerate(sentinel_nc_paths):
 
-        X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
-        Y = np.where(~mask, sentinel_chl, np.nan)
+            with Dataset(sentinel_nc_path, "r") as ncfile:
+                # Read dimensions
+                y_dim = ncfile.dimensions["y"].size
+                x_dim = ncfile.dimensions["x"].size
+
+                # Read variables
+                lats = ncfile.variables["lat"][:, :]
+                lons = ncfile.variables["lon"][:, :]
+                sentinel_chl = ncfile.variables["chl_nn"][:, :]
+                sentinel_mask = ncfile.variables["mask"][:, :]
+
+            mask = sentinel_mask.astype(bool) | ~hypso_mask.astype(bool)
+
+            X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
+            Y = np.where(~mask, sentinel_chl, np.nan)
 
 
 
-    
-        X = X[:, :,6:-6]
-        Y = Y
-
-        #X = X[~mask][:, :,6:-6]
-        #Y = Y[~mask]
-
-        X = np.clip(X, 0, 1)
-
-        Y = 10**Y
-        Y = np.clip(Y, 0, 10)
         
+            X = X[:, :,6:-6]
+            Y = Y
 
-        plt.imshow(X[:,:,40])
-        plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_band_40_' + str(i) + '.png'))
-        plt.close()
+            #X = X[~mask][:, :,6:-6]
+            #Y = Y[~mask]
 
-        plt.imshow(Y)
-        plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_sentienl_chl_' + str(i) + '.png'))
-        plt.close()
+            X = np.clip(X, 0, 1)
 
-        X = X[~mask]
-        Y = Y[~mask]
+            Y = 10**Y
+            Y = np.clip(Y, 0, 10)
+            
 
-        print(X.shape)
-        print(Y.shape)
+            plt.imshow(X[:,:,40])
+            plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_band_40_' + str(i) + '.png'))
+            plt.close()
 
-        dataset_path = os.path.join(datasets_dir, satobj.capture_name + '_dataset_' + str(i) + '.pkl')
+            plt.imshow(Y)
+            plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_sentienl_chl_' + str(i) + '.png'))
+            plt.close()
 
-        dataset = {
-            'X': X,
-            'Y': Y
-        }
+            X = X[~mask]
+            Y = Y[~mask]
 
-        with open(dataset_path, 'wb') as file:
-            pickle.dump(dataset, file)
-        
+            print(X.shape)
+            print(Y.shape)
+
+            dataset_path = os.path.join(datasets_dir, satobj.capture_name + '_dataset_' + str(i) + '.pkl')
+
+            dataset = {
+                'X': X,
+                'Y': Y
+            }
+
+            with open(dataset_path, 'wb') as file:
+                pickle.dump(dataset, file)
+
+    except Exception as ex:
+        print(ex)
+        continue
+            
 
 
 
