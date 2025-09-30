@@ -54,6 +54,7 @@ with h5py.File(output_file, 'w') as h5f:
                     Y_dset = h5f.create_dataset('Y', data=Y, maxshape=(None,), chunks=True)
                 else:
                     # Resize and append
+		    print(X.shape[0])
                     X_dset.resize(X_dset.shape[0] + X.shape[0], axis=0)
                     X_dset[-X.shape[0]:] = X
 
