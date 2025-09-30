@@ -61,17 +61,26 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
             dst_swath_def = SwathDefinition(lons=dst_lons, lats=dst_lats)
 
             nnrs = KDTreeNearestXarrayResampler(source_geo_def=src_swath_def, target_geo_def=dst_swath_def)
-            resampled_data = nnrs.resample(data, fill_value=np.nan, radius_of_influence=500)
+            sentinel_chl = nnrs.resample(data, fill_value=np.nan, radius_of_influence=500)
 
-            resampled_data = resampled_data.to_numpy()
+            sentinel_chl = sentinel_chl.to_numpy()
 
             chl_filename = satobj.capture_name + '_sentinel_chl_' + str(i)
             chl_nc_filename = chl_filename + '.nc'
 
-            plt.imshow(resampled_data)
+            plt.imshow(sentinel_chl)
             #plt.savefig(chl_filename + '.png')
             plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '.png'))
             plt.close()
+
+
+            sentinel_mask = np.isnan(sentinel_chl)
+
+            plt.imshow(sentinel_mask)
+            #plt.savefig(os.path.join(full_path, str(folder_name) + "_sentinel_chl_mask_" + str(i) + ".png"))
+            plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '_mask.png'))
+            plt.close()
+
 
 
             with Dataset(Path(l1d_nc_path).parent / chl_nc_filename, "w", format="NETCDF4") as ncfile:
@@ -84,19 +93,26 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
                 # Create variables
                 latitudes = ncfile.createVariable("lat", "f4", ("y", "x"))
                 longitudes = ncfile.createVariable("lon", "f4", ("y", "x"))
-                data = ncfile.createVariable("resampled_data", "f4", ("y", "x"))
+                chl = ncfile.createVariable("chl_nn", "f4", ("y", "x"))
+                mask = ncfile.createVariable("mask", "f4", ("y", "x"))
 
                 # Assign data
                 latitudes[:, :] = lats
                 longitudes[:, :] = lons
-                data[:, :] = resampled_data
+                chl[:, :] = sentinel_chl
+                mask[:, :] = sentinel_mask
 
 
                 # Optional: add metadata
                 latitudes.units = "degrees_north"
                 longitudes.units = "degrees_east"
-                data.units = "unknown"  # Replace with actual units if known
+                chl.units = "unknown"  # Replace with actual units if known
+                mask.units = "unknown"  # Replace with actual units if known
                 ncfile.description = "NetCDF file containing resampled Sentinel-3 chl from " + str(entry)
+
+
+
+
 
         except Exception as ex:
             print(ex)

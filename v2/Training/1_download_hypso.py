@@ -4,11 +4,12 @@ import subprocess
 import os
 
 # Ensure the target directory exists
-target_dir = "captures_test"
-os.makedirs(target_dir, exist_ok=True)
+base_dir = "/home/_shared/ARIEL/PLSR/captures"
+os.makedirs(base_dir, exist_ok=True)
 
 # Path to your CSV file
-csv_file_path = '/home/cameron/Projects/hypso-package-scripts/Matchups/captures_test.csv'
+script_dir = os.path.dirname(os.path.realpath(__file__))
+csv_file_path = os.path.join(script_dir, "captures.csv")
 
 # Read the CSV and download each file
 with open(csv_file_path, newline='') as csvfile:
@@ -21,7 +22,7 @@ with open(csv_file_path, newline='') as csvfile:
             url = f"http://129.241.2.147:8008/{prefix}/{entry}/"
             command = [
                 "wget", "-r", "-nH", "--cut-dirs=1",
-                "-P", target_dir,  # Specify output directory
+                "-P", base_dir,  # Specify output directory
                 url
             ]
             result = subprocess.run(command)
@@ -33,7 +34,7 @@ with open(csv_file_path, newline='') as csvfile:
                 url_8009 = f"http://129.241.2.147:8009/{prefix}/{entry}/"
                 command_8009 = [
                     "wget", "-r", "-nH", "--cut-dirs=1",
-                    "-P", target_dir,
+                    "-P", base_dir,
                     url_8009
                 ]
                 subprocess.run(command_8009)

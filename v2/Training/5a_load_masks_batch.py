@@ -4,7 +4,7 @@ import os
 import subprocess
 
 # Path to the base directory
-base_dir = "/home/cameron/captures_test"
+base_dir = "/home/_shared/ARIEL/PLSR/captures"
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 script = os.path.join(script_dir, "5b_load_masks.py")

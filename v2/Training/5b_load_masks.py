@@ -48,8 +48,21 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     labels_nc_filename = labels_filename + '.nc'
 
     plt.imshow(labels_arr)
-    plt.savefig(os.path.join(Path(l1d_nc_path).parent, labels_filename + '.png'))
+    plt.savefig(os.path.join(Path(l1d_nc_path).parent, labels_filename + '_labels.png'))
     plt.close()
+
+    plt.imshow(cloud_labels_arr)
+    plt.savefig(os.path.join(Path(l1d_nc_path).parent, labels_filename + '_labels_cloud.png'))
+    plt.close()
+
+    plt.imshow(water_labels_arr)
+    plt.savefig(os.path.join(Path(l1d_nc_path).parent, labels_filename + '_labels_water.png'))
+    plt.close()
+
+    plt.imshow(land_labels_arr)
+    plt.savefig(os.path.join(Path(l1d_nc_path).parent, labels_filename + '_labels_land.png'))
+    plt.close()
+
 
     
     with Dataset(Path(l1d_nc_path).parent / labels_nc_filename, "w", format="NETCDF4") as ncfile:
@@ -97,7 +110,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
 if __name__ == "__main__":
 
-    if False:
+    if True:
         if len(sys.argv) < 2 or len(sys.argv) > 2:
             print("Usage: python process_l1d_dir.py <nc_dir_path>")
             sys.exit(1)
