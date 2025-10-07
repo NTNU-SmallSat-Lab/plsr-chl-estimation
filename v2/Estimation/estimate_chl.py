@@ -168,7 +168,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         plt.savefig('./mask.png')
         plt.close()
 
-    Y[~mask] = np.nan
+    Y[mask] = np.nan
 
 
     if PRODUCE_FIGURES:
