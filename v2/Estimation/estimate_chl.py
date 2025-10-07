@@ -40,6 +40,94 @@ PRODUCE_FIGURES = True
 
 
 
+def write_nc(dst_path, chl, lats, lons, timestamps):
+
+    COMP_SCHEME = 'zlib'  # Default: zlib
+    COMP_LEVEL = 4  # Default (when scheme != none): 4
+    COMP_SHUFFLE = True  # Default (when scheme != none): True
+
+    # Copy dimensions
+    with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
+        xc = len(f.dimensions['xc'])
+        yc = len(f.dimensions['yc'])
+
+    # Create new NetCDF file
+    with (nc.Dataset(dst_path, 'w', format='NETCDF4') as netfile):
+
+        #set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1B")
+
+        # Create dimensions
+        netfile.createDimension('y', yc)
+        netfile.createDimension('x', xc)
+
+        latitude = netfile.createVariable(
+            'latitude', 'f8',
+            ('y','x'),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+        #latitude.name = "latitude"
+        latitude.standard_name = "latitude"
+        latitude.units = "degrees_north"
+        latitude[:] = lats
+
+
+        longitude = netfile.createVariable(
+            'longitude', 'f8',
+            ('y','x'),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+        #longitude.name = "longitude"
+        longitude.standard_name = "longitude"
+        longitude.units = "degrees_north"
+        longitude[:] = lons
+
+
+        chlor_a = netfile.createVariable(
+            'chl_a', 'f8',
+            ('y','x'),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+        chlor_a.standard_name = "chl_a"
+        chlor_a.units = "mg/m^3" # TODO: check units
+        chlor_a[:] = chl
+
+
+        netfile.createDimension('adcssamples', len(timestamps))
+
+        ts = netfile.createVariable(
+            'timestamps', 'f8',
+            ('adcssamples',),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+
+        ts[:] = timestamps
+
+        '''
+        # ADCS Timestamps ----------------------------------------------------
+        len_timestamps = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
+        netfile.createDimension('adcssamples', len_timestamps)
+
+        meta_adcs_timestamps = netfile.createVariable(
+            'metadata/adcs/timestamps', 'f8',
+            ('adcssamples',),
+            compression=COMP_SCHEME,
+            complevel=COMP_LEVEL,
+            shuffle=COMP_SHUFFLE
+        )
+
+        meta_adcs_timestamps[:] = getattr(satobj, 'nc_adcs_vars')["timestamps"][:]
+        '''
+
+
+
 
 
 
@@ -483,92 +571,4 @@ def main(l1a_nc_path, labels_path, dst_path, lats_path=None, lons_path=None):
 
 '''
     
-def write_nc(dst_path, chl, lats, lons, timestamps):
-
-    COMP_SCHEME = 'zlib'  # Default: zlib
-    COMP_LEVEL = 4  # Default (when scheme != none): 4
-    COMP_SHUFFLE = True  # Default (when scheme != none): True
-
-    # Copy dimensions
-    with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
-        xc = len(f.dimensions['xc'])
-        yc = len(f.dimensions['yc'])
-
-    # Create new NetCDF file
-    with (nc.Dataset(dst_path, 'w', format='NETCDF4') as netfile):
-
-        #set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1B")
-
-        # Create dimensions
-        netfile.createDimension('y', yc)
-        netfile.createDimension('x', xc)
-
-        latitude = netfile.createVariable(
-            'latitude', 'f8',
-            ('y','x'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        #latitude.name = "latitude"
-        latitude.standard_name = "latitude"
-        latitude.units = "degrees_north"
-        latitude[:] = lats
-
-
-        longitude = netfile.createVariable(
-            'longitude', 'f8',
-            ('y','x'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        #longitude.name = "longitude"
-        longitude.standard_name = "longitude"
-        longitude.units = "degrees_north"
-        longitude[:] = lons
-
-
-        chlor_a = netfile.createVariable(
-            'chl_a', 'f8',
-            ('y','x'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        chlor_a.standard_name = "chl_a"
-        chlor_a.units = "mg/m^3" # TODO: check units
-        chlor_a[:] = chl
-
-
-        netfile.createDimension('adcssamples', len(timestamps))
-
-        ts = netfile.createVariable(
-            'timestamps', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-
-        ts[:] = timestamps
-
-        '''
-        # ADCS Timestamps ----------------------------------------------------
-        len_timestamps = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
-        netfile.createDimension('adcssamples', len_timestamps)
-
-        meta_adcs_timestamps = netfile.createVariable(
-            'metadata/adcs/timestamps', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-
-        meta_adcs_timestamps[:] = getattr(satobj, 'nc_adcs_vars')["timestamps"][:]
-        '''
-
-
-
 
