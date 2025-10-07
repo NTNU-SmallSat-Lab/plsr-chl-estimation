@@ -21,6 +21,7 @@ from sklearn.cross_decomposition import PLSRegression
 import os
 import h5py
 
+components = 10
 
 script_dir = os.getcwd()
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +29,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
 dataset_file = os.path.join(datasets_dir, "combined_dataset.h5")
+model_file = os.path.join(datasets_dir, "pls_model_c" + str(components) + ".h5")
 
 # Open the HDF5 file in read mode
 with h5py.File(dataset_file, 'r') as h5f:
@@ -44,7 +46,7 @@ print(X.shape)
 print(Y.shape)
 
 
-components = 10
+
 
 print("Running with " + str(components) + " components.")
 
@@ -56,7 +58,7 @@ pls = PLSRegression(n_components=components, max_iter=500)
 ##print(scores)
 
 pls.fit(X,Y)
-pls_model_path = os.path.join(output_dir, "pls_model_c" + str(components) + ".pkl")
+pls_model_path = os.path.join(model_file, "pls_model_c" + str(components) + ".pkl")
 with open(pls_model_path, 'wb') as file:
     pickle.dump(pls, file)
 
