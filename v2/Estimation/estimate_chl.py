@@ -139,9 +139,6 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         plt.savefig('./chl_hypso.png')
         plt.close()
 
-    print(Y)
-
-
 
     lats = satobj.latitudes_indirect
     lons = satobj.longitudes_indirect
@@ -177,6 +174,14 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         plt.close()
 
 
+
+    timestamps = getattr(satobj, 'nc_adcs_vars')["timestamps"]
+
+
+    dst_path = "./" + satobj.capture_name + "-plsr-chla.nc"
+
+    # Write to NetCDF 
+    write_nc(dst_path=dst_path, chl=Y, lats=satobj.latitudes_indirect, lons=satobj.longitudes_indirect, timestamps=timestamps)
 
 
 
