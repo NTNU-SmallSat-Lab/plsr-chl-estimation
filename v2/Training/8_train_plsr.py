@@ -24,11 +24,13 @@ import h5py
 
 script_dir = os.getcwd()
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, "dataset_h2")
 
+
+datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+dataset_file = os.path.join(datasets_dir, "combined_dataset.h5")
 
 # Open the HDF5 file in read mode
-with h5py.File(input_file, 'r') as h5f:
+with h5py.File(dataset_file, 'r') as h5f:
     # Access datasets
     X = h5f['X'][:]
     Y = h5f['Y'][:]
