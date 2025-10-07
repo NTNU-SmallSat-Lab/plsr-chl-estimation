@@ -7,53 +7,42 @@ Author: Cameron Penne
 Date: 2025-01-06
 """
 
-import sys
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
+#import sys
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
 
-from hypso import Hypso1
+from hypso import Hypso
 import os
 import numpy as np
 import xarray as xr
 from matplotlib import pyplot as plt
-from datetime import datetime
-import csv
 from pyresample import load_area
-import glob
-from satpy import Scene
-from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
-from pyresample.bilinear.xarr import XArrayBilinearResampler 
 import pickle
-import glob
-
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
-
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import KFold
-
 import os
-import re
-from collections import defaultdict
+import h5py
+
 
 script_dir = os.getcwd()
 script_dir = os.path.dirname(os.path.abspath(__file__))
 output_dir = os.path.join(script_dir, "dataset_h2")
 
-dataset_X_path = os.path.join(output_dir, "dataset_X.pkl")
-dataset_Y_path = os.path.join(output_dir, "dataset_Y.pkl")
+
+# Open the HDF5 file in read mode
+with h5py.File(input_file, 'r') as h5f:
+    # Access datasets
+    X = h5f['X'][:]
+    Y = h5f['Y'][:]
+
+    # Print shapes
+    print(f"X shape: {X.shape}")
+    print(f"Y shape: {Y.shape}")
 
 
-with open(dataset_X_path, 'rb') as file:
-    X = pickle.load(file)
+print(X.shape)
+print(Y.shape)
 
-with open(dataset_Y_path, 'rb') as file:
-    Y = pickle.load(file)
 
 components = 10
-
-
 
 print("Running with " + str(components) + " components.")
 

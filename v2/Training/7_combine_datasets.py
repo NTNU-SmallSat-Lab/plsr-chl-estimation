@@ -6,14 +6,8 @@ import numpy as np
 from pathlib import Path
 from hypso import Hypso
 import glob
-from satpy import Scene
-from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
-from pyresample.bilinear.xarr import XArrayBilinearResampler 
-from pyresample.geometry import SwathDefinition, AreaDefinition
 import xarray as xr
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
-import subprocess
 import pickle
 import h5py
 import numpy as np
