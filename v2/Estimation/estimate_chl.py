@@ -141,6 +141,46 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     print(Y)
 
+
+
+    lats = satobj.latitudes_indirect
+    lons = satobj.longitudes_indirect
+    spatial_dimensions = satobj.spatial_dimensions
+    
+    full_path = os.path.join(Path(l1a_nc_path).parent, "processing-temp")
+
+
+    labels_path = os.path.join(full_path, "sea-land-cloud.labels")
+
+    from hypso.classification import decode_jon_cnn_labels, decode_jon_cnn_cloud_mask, decode_jon_cnn_water_mask, decode_jon_cnn_land_mask
+
+    labels_arr = decode_jon_cnn_labels(file_path=labels_path, spatial_dimensions=spatial_dimensions)
+    cloud_labels_arr = decode_jon_cnn_cloud_mask(file_path=labels_path, spatial_dimensions=spatial_dimensions)
+    water_labels_arr = decode_jon_cnn_water_mask(file_path=labels_path, spatial_dimensions=spatial_dimensions)
+    land_labels_arr = decode_jon_cnn_land_mask(file_path=labels_path, spatial_dimensions=spatial_dimensions)
+    
+
+    mask = ~water_labels_arr.astype(bool)
+
+
+    if PRODUCE_FIGURES:
+        plt.imshow(mask)
+        plt.savefig('./mask.png')
+        plt.close()
+
+    Y[~mask] = np.nan
+
+
+    if PRODUCE_FIGURES:
+        plt.imshow(Y)
+        plt.savefig('./chl_hypso_masked.png')
+        plt.close()
+
+
+
+
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2 or len(sys.argv) > 2:
         print("Usage: python process_l1d_dir.py <nc_dir_path>")
