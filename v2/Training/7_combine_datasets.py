@@ -47,13 +47,16 @@ with h5py.File(output_file, 'w') as h5f:
                     X_dset = h5f.create_dataset('X', data=X, maxshape=(None, X.shape[1]), chunks=True)
                     Y_dset = h5f.create_dataset('Y', data=Y, maxshape=(None,), chunks=True)
                 else:
-                    # Resize and append
                     print(X.shape[0])
-                    X_dset.resize(X_dset.shape[0] + X.shape[0], axis=0)
-                    X_dset[-X.shape[0]:] = X
+                    if X.shape[0] > 0:
+                        # Resize and append
+                        X_dset.resize(X_dset.shape[0] + X.shape[0], axis=0)
+                        X_dset[-X.shape[0]:] = X
 
-                    Y_dset.resize(Y_dset.shape[0] + Y.shape[0], axis=0)
-                    Y_dset[-Y.shape[0]:] = Y
+                        Y_dset.resize(Y_dset.shape[0] + Y.shape[0], axis=0)
+                        Y_dset[-Y.shape[0]:] = Y
+                    else:
+                        print("Size is zero. Skipping.")
 
 print(f"Saved concatenated dataset to {output_file}")
 
