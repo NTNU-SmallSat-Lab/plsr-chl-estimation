@@ -92,7 +92,7 @@ for entry in os.listdir(base_dir):
             X = np.clip(X, 0, 1)
 
             Y = 10**Y
-            Y = np.clip(Y, 0, 10)
+            Y = np.clip(Y, 0, 20)
             
 
             plt.imshow(X[:,:,40])
