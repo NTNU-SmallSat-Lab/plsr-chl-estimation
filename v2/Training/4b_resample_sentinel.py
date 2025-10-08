@@ -33,7 +33,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     # Get HYPSO DT
     from datetime import datetime
     hypso_dt = datetime.fromisoformat(satobj.nc_attrs['timestamp_acquired'].replace("Z", ""))
-
+    hypso_dt = hypso_dt.replace(tzinfo=None)
 
     full_path = os.path.join(Path(l1d_nc_path).parent, "sentinel_granules")
 
@@ -56,6 +56,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
         sentinel_scene = Scene(filenames=filenames, reader='olci_l2')
 
         sentinel_dt = sentinel_scene.start_time
+        sentinel_dt = sentinel_dt.replace(tzinfo=None)
 
         print(sentinel_dt)
 
