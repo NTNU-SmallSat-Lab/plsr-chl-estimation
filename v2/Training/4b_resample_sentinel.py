@@ -30,11 +30,37 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     lats = satobj.latitudes_indirect
     lons = satobj.longitudes_indirect
     
+    # Get HYPSO DT
+    from datetime import datetime
+    hypso_dt = datetime.fromisoformat(satobj.nc_attrs['timestamp_acquired'].replace("Z", ""))
+
+
     full_path = os.path.join(Path(l1d_nc_path).parent, "sentinel_granules")
+
+
+    sentinel_scenes = {}
+
 
     for i, entry in enumerate(os.listdir(full_path)):
         
         sentinel_path = os.path.join(full_path, entry)
+
+
+
+
+        # Get Sentinel DT
+        filenames = []
+        filenames = filenames + glob.glob(sentinel_path + '/geo_coordinates.nc')
+        filenames = filenames + glob.glob(sentinel_path + '/chl_nn.nc')
+
+        sentinel_scene = Scene(filenames=filenames, reader='olci_l2')
+
+        sentinel_dt = sentinel_scene.start_time
+
+        print(sentinel_dt)
+
+        sentinel_scenes[sentinel_dt] = sentinel_scene
+
 
         try:
             filenames = []
