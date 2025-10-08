@@ -152,7 +152,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
     except Exception as ex:
         print(ex)
-        continue
+        #continue
 
         
 
