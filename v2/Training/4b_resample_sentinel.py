@@ -68,11 +68,15 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     # Compare Sentinel-3 and HYPSO datetimes. Select closest match
 
     dates = sentinel_scenes.keys()
-    print(dates)
+
+    print("Sentinel-3 Matchups under consideration:")
+    for date in dates:
+        print(date)
 
     closest_dt = min(dates, key=lambda d: abs(d - hypso_dt))
 
-
+    print("Closest Sentinel-3 Matchup:")
+    print(closest_dt)
 
     try:
 
