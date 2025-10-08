@@ -62,87 +62,97 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
         sentinel_scenes[sentinel_dt] = sentinel_scene
 
 
-        try:
-            filenames = []
-            filenames = filenames + glob.glob(sentinel_path + '/geo_coordinates.nc')
-            filenames = filenames + glob.glob(sentinel_path + '/chl_nn.nc')
-
-            sentinel_scene = Scene(filenames=filenames, reader='olci_l2')
-            sentinel_scene.load(['chl_nn'])
-
-            data = sentinel_scene['chl_nn']
-
-            s1 = sentinel_scene.to_xarray(include_lonlats=True)
-            src_lats = s1['latitude'].to_numpy()
-            src_lons = s1['longitude'].to_numpy()
-
-            src_lats = xr.DataArray(src_lats, dims=['y', 'x'])
-            src_lons = xr.DataArray(src_lons, dims=['y', 'x'])
-
-            src_swath_def = SwathDefinition(lons=src_lons, lats=src_lats)
-
-            dst_lons = xr.DataArray(lons, dims=['y', 'x'])
-            dst_lats = xr.DataArray(lats, dims=['y', 'x'])
-
-            dst_swath_def = SwathDefinition(lons=dst_lons, lats=dst_lats)
-
-            nnrs = KDTreeNearestXarrayResampler(source_geo_def=src_swath_def, target_geo_def=dst_swath_def)
-            sentinel_chl = nnrs.resample(data, fill_value=np.nan, radius_of_influence=500)
-
-            sentinel_chl = sentinel_chl.to_numpy()
-
-            chl_filename = satobj.capture_name + '_sentinel_chl_' + str(i)
-            chl_nc_filename = chl_filename + '.nc'
-
-            plt.imshow(sentinel_chl)
-            #plt.savefig(chl_filename + '.png')
-            plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '.png'))
-            plt.close()
 
 
-            sentinel_mask = np.isnan(sentinel_chl)
+    # Compare Sentinel-3 and HYPSO datetimes. Select closest match
 
-            plt.imshow(sentinel_mask)
-            #plt.savefig(os.path.join(full_path, str(folder_name) + "_sentinel_chl_mask_" + str(i) + ".png"))
-            plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '_mask.png'))
-            plt.close()
+    dates = sentinel_scenes.keys()
+    print(dates)
+
+    closest_dt = min(dates, key=lambda d: abs(d - hypso_dt))
 
 
 
-            with Dataset(Path(l1d_nc_path).parent / chl_nc_filename, "w", format="NETCDF4") as ncfile:
+    try:
+
+        sentinel_scene = sentinel_scenes[closest_dt]
+
+        #filenames = []
+        #filenames = filenames + glob.glob(sentinel_path + '/geo_coordinates.nc')
+        #filenames = filenames + glob.glob(sentinel_path + '/chl_nn.nc')
+        #sentinel_scene = Scene(filenames=filenames, reader='olci_l2')
+        sentinel_scene.load(['chl_nn'])
+
+        data = sentinel_scene['chl_nn']
+
+        s1 = sentinel_scene.to_xarray(include_lonlats=True)
+        src_lats = s1['latitude'].to_numpy()
+        src_lons = s1['longitude'].to_numpy()
+
+        src_lats = xr.DataArray(src_lats, dims=['y', 'x'])
+        src_lons = xr.DataArray(src_lons, dims=['y', 'x'])
+
+        src_swath_def = SwathDefinition(lons=src_lons, lats=src_lats)
+
+        dst_lons = xr.DataArray(lons, dims=['y', 'x'])
+        dst_lats = xr.DataArray(lats, dims=['y', 'x'])
+
+        dst_swath_def = SwathDefinition(lons=dst_lons, lats=dst_lats)
+
+        nnrs = KDTreeNearestXarrayResampler(source_geo_def=src_swath_def, target_geo_def=dst_swath_def)
+        sentinel_chl = nnrs.resample(data, fill_value=np.nan, radius_of_influence=500)
+
+        sentinel_chl = sentinel_chl.to_numpy()
+
+        chl_filename = satobj.capture_name + '_sentinel_chl_' + str(i)
+        chl_nc_filename = chl_filename + '.nc'
+
+        plt.imshow(sentinel_chl)
+        #plt.savefig(chl_filename + '.png')
+        plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '.png'))
+        plt.close()
 
 
-                # Define dimensions
-                ncfile.createDimension("y", lats.shape[0])
-                ncfile.createDimension("x", lats.shape[1])
+        sentinel_mask = np.isnan(sentinel_chl)
 
-                # Create variables
-                latitudes = ncfile.createVariable("lat", "f4", ("y", "x"))
-                longitudes = ncfile.createVariable("lon", "f4", ("y", "x"))
-                chl = ncfile.createVariable("chl_nn", "f4", ("y", "x"))
-                mask = ncfile.createVariable("mask", "f4", ("y", "x"))
-
-                # Assign data
-                latitudes[:, :] = lats
-                longitudes[:, :] = lons
-                chl[:, :] = sentinel_chl
-                mask[:, :] = sentinel_mask
-
-
-                # Optional: add metadata
-                latitudes.units = "degrees_north"
-                longitudes.units = "degrees_east"
-                chl.units = "unknown"  # Replace with actual units if known
-                mask.units = "unknown"  # Replace with actual units if known
-                ncfile.description = "NetCDF file containing resampled Sentinel-3 chl from " + str(entry)
+        plt.imshow(sentinel_mask)
+        #plt.savefig(os.path.join(full_path, str(folder_name) + "_sentinel_chl_mask_" + str(i) + ".png"))
+        plt.savefig(os.path.join(Path(l1d_nc_path).parent, chl_filename + '_mask.png'))
+        plt.close()
 
 
 
+        with Dataset(Path(l1d_nc_path).parent / chl_nc_filename, "w", format="NETCDF4") as ncfile:
 
 
-        except Exception as ex:
-            print(ex)
-            continue
+            # Define dimensions
+            ncfile.createDimension("y", lats.shape[0])
+            ncfile.createDimension("x", lats.shape[1])
+
+            # Create variables
+            latitudes = ncfile.createVariable("lat", "f4", ("y", "x"))
+            longitudes = ncfile.createVariable("lon", "f4", ("y", "x"))
+            chl = ncfile.createVariable("chl_nn", "f4", ("y", "x"))
+            mask = ncfile.createVariable("mask", "f4", ("y", "x"))
+
+            # Assign data
+            latitudes[:, :] = lats
+            longitudes[:, :] = lons
+            chl[:, :] = sentinel_chl
+            mask[:, :] = sentinel_mask
+
+
+            # Optional: add metadata
+            latitudes.units = "degrees_north"
+            longitudes.units = "degrees_east"
+            chl.units = "unknown"  # Replace with actual units if known
+            mask.units = "unknown"  # Replace with actual units if known
+            ncfile.description = "NetCDF file containing resampled Sentinel-3 chl from " + str(entry)
+
+
+    except Exception as ex:
+        print(ex)
+        continue
 
         
 
