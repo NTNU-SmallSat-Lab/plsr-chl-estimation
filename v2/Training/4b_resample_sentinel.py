@@ -58,8 +58,6 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
         sentinel_dt = sentinel_scene.start_time
         sentinel_dt = sentinel_dt.replace(tzinfo=None)
 
-        print(sentinel_dt)
-
         sentinel_scenes[sentinel_dt] = sentinel_scene
 
 
@@ -75,7 +73,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
     closest_dt = min(dates, key=lambda d: abs(d - hypso_dt))
 
-    print("Closest Sentinel-3 Matchup:")
+    print("Closest Sentinel-3 matchup:")
     print(closest_dt)
 
     try:
