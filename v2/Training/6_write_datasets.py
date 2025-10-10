@@ -39,7 +39,7 @@ for entry in os.listdir(base_dir):
     l1d_nc_path = os.path.join(full_path, f"{folder_name}-l1d.nc")
     slc_nc_path = os.path.join(full_path, f"{folder_name}-slc.nc")
 
-    pattern = os.path.join(full_path, f"{folder_name}_sentinel_chl_*.nc")
+    pattern = os.path.join(full_path, f"{folder_name}_sentinel_chl*.nc")
     sentinel_nc_paths = glob.glob(pattern)
 
     # Load the data
