@@ -107,7 +107,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
         sentinel_chl = sentinel_chl.to_numpy()
 
-        chl_filename = satobj.capture_name + '_sentinel_chl_' + str(i)
+        chl_filename = satobj.capture_name + '_sentinel_chl' #'_sentinel_chl_' + str(i)
         chl_nc_filename = chl_filename + '.nc'
 
         plt.imshow(sentinel_chl)
