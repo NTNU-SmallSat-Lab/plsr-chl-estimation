@@ -45,16 +45,21 @@ PRODUCE_FIGURES = True
 
 
 
-def write_nc(dst_path, chl, lats, lons, timestamps):
+def write_nc(dst_path, chl, lats, lons, timestamps, grid=True):
 
     COMP_SCHEME = 'zlib'  # Default: zlib
     COMP_LEVEL = 4  # Default (when scheme != none): 4
     COMP_SHUFFLE = True  # Default (when scheme != none): True
 
     # Copy dimensions
-    #with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
-    xc = lats.shape[1]
-    yc = lats.shape[0]
+    if grid:
+        with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
+            xc = len(f.dimensions['xc'])
+            yc = len(f.dimensions['yc'])
+    else:
+        xc = lats.shape[1]
+        yc = lats.shape[0]
+
 
     # Create new NetCDF file
     with (nc.Dataset(dst_path, 'w', format='NETCDF4') as netfile):
