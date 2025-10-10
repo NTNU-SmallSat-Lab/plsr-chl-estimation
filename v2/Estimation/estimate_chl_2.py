@@ -29,7 +29,7 @@ chl_dir.mkdir(parents=True, exist_ok=True)
 
 model_path = os.path.join(datasets_dir, "pls_model_c" + str(10) + ".pkl")
 
-script_dir = os.path.dirname(os.path.realpath(__file__)))
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 MIDNOR_GRID_PATH = os.path.join(script_dir, "midnor_grid.nc")
 
