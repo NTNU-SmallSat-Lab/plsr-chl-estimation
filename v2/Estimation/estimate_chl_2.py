@@ -284,7 +284,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
 
     # Resample to midnor grid (nearest)
-    chl_hypso_resampled = resample_dataarray_kd_tree_nearest(area_def=target_swath,
+    Y_resampled = resample_dataarray_kd_tree_nearest(area_def=target_swath,
                                                              data=Y,
                                                              latitudes=lats,
                                                              longitudes=lons
@@ -302,7 +302,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
             grid_lon = grid_longitudes[x_idx, y_idx]
 
             if globe.is_land(grid_lat, grid_lon):
-                chl_hypso_resampled[x_idx, y_idx] = np.nan
+                Y_resampled[x_idx, y_idx] = np.nan
 
 
 
@@ -318,7 +318,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
     
     
     # Write to NetCDF 
-    write_nc(dst_path=dst_path, chl=Y, lats=satobj.latitudes_indirect, lons=satobj.longitudes_indirect, timestamps=timestamps)
+    write_nc(dst_path=dst_path, chl=Y_resampled, lats=grid_lat, lons=grid_lon, timestamps=timestamps)
 
 
 
