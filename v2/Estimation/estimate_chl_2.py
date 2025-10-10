@@ -24,9 +24,14 @@ from global_land_mask import globe
 
 
 datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+chl_dir = Path("/home/_shared/ARIEL/PLSR/chlorophyll")
+chl_dir.mkdir(parents=True, exist_ok=True)
+
 model_path = os.path.join(datasets_dir, "pls_model_c" + str(10) + ".pkl")
 
-MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
+script_dir = os.path.dirname(os.path.realpath(__file__)))
+
+MIDNOR_GRID_PATH = os.path.join(script_dir, "midnor_grid.nc")
 
 PRODUCE_FIGURES = True
 
@@ -263,11 +268,55 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
 
 
+
+
+
+
+
+
+    # Load midnor grid, create swath
+    with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
+        grid_longitudes = f.variables['gridLons'][:]
+        grid_latitudes = f.variables['gridLats'][:]
+
+    target_swath = SwathDefinition(lons=grid_longitudes, lats=grid_latitudes)
+
+
+
+    # Resample to midnor grid (nearest)
+    chl_hypso_resampled = resample_dataarray_kd_tree_nearest(area_def=target_swath,
+                                                             data=Y,
+                                                             latitudes=lats,
+                                                             longitudes=lons
+                                                             )
+
+    # Apply grid land mask
+    #grid_land_mask = np.empty(grid_longitudes.shape)
+
+    grid_x_dim, grid_y_dim = grid_longitudes.shape
+
+    for x_idx in range(0,grid_x_dim):
+        for y_idx in range(0,grid_y_dim):
+    
+            grid_lat = grid_latitudes[x_idx, y_idx]
+            grid_lon = grid_longitudes[x_idx, y_idx]
+
+            if globe.is_land(grid_lat, grid_lon):
+                chl_hypso_resampled[x_idx, y_idx] = np.nan
+
+
+
+
+    # Get ADCS timestamps 
+    #adcssamples = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
+
     timestamps = getattr(satobj, 'nc_adcs_vars')["timestamps"]
 
 
-    dst_path = "./" + satobj.capture_name + "-plsr-chla.nc"
 
+    dst_path = os.path.join(chl_dir, satobj.capture_name + "-plsr-chla.nc")
+    
+    
     # Write to NetCDF 
     write_nc(dst_path=dst_path, chl=Y, lats=satobj.latitudes_indirect, lons=satobj.longitudes_indirect, timestamps=timestamps)
 
