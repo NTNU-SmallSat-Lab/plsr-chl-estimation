@@ -24,9 +24,14 @@ from global_land_mask import globe
 
 
 datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+chl_dir = Path("/home/_shared/ARIEL/PLSR/chlorophyll")
+chl_dir.mkdir(parents=True, exist_ok=True)
+
 model_path = os.path.join(datasets_dir, "pls_model_c" + str(10) + ".pkl")
 
-MIDNOR_GRID_PATH = "/home/cameron/Projects/plsr-chl-estimation/Estimation/midnor_grid.nc"
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
+MIDNOR_GRID_PATH = os.path.join(script_dir, "midnor_grid.nc")
 
 PRODUCE_FIGURES = True
 
@@ -40,16 +45,21 @@ PRODUCE_FIGURES = True
 
 
 
-def write_nc(dst_path, chl, lats, lons, timestamps):
+def write_nc(dst_path, chl, lats, lons, timestamps, grid=True):
 
     COMP_SCHEME = 'zlib'  # Default: zlib
     COMP_LEVEL = 4  # Default (when scheme != none): 4
     COMP_SHUFFLE = True  # Default (when scheme != none): True
 
     # Copy dimensions
-    with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
-        xc = len(f.dimensions['xc'])
-        yc = len(f.dimensions['yc'])
+    if grid:
+        with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
+            xc = len(f.dimensions['xc'])
+            yc = len(f.dimensions['yc'])
+    else:
+        xc = lats.shape[1]
+        yc = lats.shape[0]
+
 
     # Create new NetCDF file
     with (nc.Dataset(dst_path, 'w', format='NETCDF4') as netfile):
@@ -157,55 +167,60 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     satobj = Hypso(path=nc_file, verbose=True)
 
-    #print(satobj.nc_attrs['target_latitude'])
-    #print(satobj.nc_attrs['target_longitude'])
+
+    if not os.path.isfile(satobj.l1d_nc_file):
+
+        #print(satobj.nc_attrs['target_latitude'])
+        #print(satobj.nc_attrs['target_longitude'])
 
 
-    # Run indirect georeferencing
-    if lats_path is not None and lons_path is not None:
-        try:
+        # Run indirect georeferencing
+        if lats_path is not None and lons_path is not None:
+            try:
 
-            with open(lats_path, mode='rb') as file:
-                file_content = file.read()
-            
-            lats = np.frombuffer(file_content, dtype=np.float32)
+                with open(lats_path, mode='rb') as file:
+                    file_content = file.read()
+                
+                lats = np.frombuffer(file_content, dtype=np.float32)
 
-            lats = lats.reshape(satobj.spatial_dimensions)
+                lats = lats.reshape(satobj.spatial_dimensions)
 
-            with open(lons_path, mode='rb') as file:
-                file_content = file.read()
-            
-            lons = np.frombuffer(file_content, dtype=np.float32)
-  
-            lons = lons.reshape(satobj.spatial_dimensions)
+                with open(lons_path, mode='rb') as file:
+                    file_content = file.read()
+                
+                lons = np.frombuffer(file_content, dtype=np.float32)
+    
+                lons = lons.reshape(satobj.spatial_dimensions)
 
 
-            # Directly provide the indirect lat/lons loaded from the file. This function will run the track geometry computations.
-            satobj.run_indirect_georeferencing(latitudes=lats, longitudes=lons)
+                # Directly provide the indirect lat/lons loaded from the file. This function will run the track geometry computations.
+                satobj.run_indirect_georeferencing(latitudes=lats, longitudes=lons)
 
-            print(satobj.latitudes_indirect)
-            print(satobj.longitudes_indirect)
+                print(satobj.latitudes_indirect)
+                print(satobj.longitudes_indirect)
 
-            satobj.generate_l1b_cube()
-            satobj.generate_l1c_cube()
-            satobj.generate_l1d_cube(use_indirect_georef=True)
+                satobj.generate_l1b_cube()
+                satobj.generate_l1c_cube()
+                satobj.generate_l1d_cube(use_indirect_georef=True)
 
-        except Exception as ex:
-            print(ex)
-            print('Indirect georeferencing has failed. Defaulting to direct georeferencing.')
+            except Exception as ex:
+                print(ex)
+                print('Indirect georeferencing has failed. Defaulting to direct georeferencing.')
 
+                satobj.run_direct_georeferencing()
+                satobj.generate_l1b_cube()
+                satobj.generate_l1c_cube()
+                satobj.generate_l1d_cube(use_indirect_georef=False)
+
+        else:
             satobj.run_direct_georeferencing()
+
             satobj.generate_l1b_cube()
             satobj.generate_l1c_cube()
             satobj.generate_l1d_cube(use_indirect_georef=False)
 
     else:
-        satobj.run_direct_georeferencing()
-
-        satobj.generate_l1b_cube()
-        satobj.generate_l1c_cube()
-        satobj.generate_l1d_cube(use_indirect_georef=False)
-        
+        satobj = Hypso(path=satobj.l1d_nc_file, verbose=True)
 
 
     # Generate PLSR estimates
@@ -263,13 +278,57 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
 
 
+
+
+
+
+
+
+    # Load midnor grid, create swath
+    with nc.Dataset(MIDNOR_GRID_PATH, format="NETCDF4") as f:
+        grid_longitudes = f.variables['gridLons'][:]
+        grid_latitudes = f.variables['gridLats'][:]
+
+    target_swath = SwathDefinition(lons=grid_longitudes, lats=grid_latitudes)
+
+
+
+    # Resample to midnor grid (nearest)
+    Y_resampled = resample_dataarray_kd_tree_nearest(area_def=target_swath,
+                                                             data=Y,
+                                                             latitudes=lats,
+                                                             longitudes=lons
+                                                             )
+
+    # Apply grid land mask
+    #grid_land_mask = np.empty(grid_longitudes.shape)
+
+    grid_x_dim, grid_y_dim = grid_longitudes.shape
+
+    for x_idx in range(0,grid_x_dim):
+        for y_idx in range(0,grid_y_dim):
+    
+            grid_lat = grid_latitudes[x_idx, y_idx]
+            grid_lon = grid_longitudes[x_idx, y_idx]
+
+            if globe.is_land(grid_lat, grid_lon):
+                Y_resampled[x_idx, y_idx] = np.nan
+
+
+
+
+    # Get ADCS timestamps 
+    #adcssamples = getattr(satobj, 'nc_dimensions')["adcssamples"] #.size
+
     timestamps = getattr(satobj, 'nc_adcs_vars')["timestamps"]
 
 
-    dst_path = "./" + satobj.capture_name + "-plsr-chla.nc"
 
+    dst_path = os.path.join(chl_dir, satobj.capture_name + "-plsr-chla.nc")
+    
+    
     # Write to NetCDF 
-    write_nc(dst_path=dst_path, chl=Y, lats=satobj.latitudes_indirect, lons=satobj.longitudes_indirect, timestamps=timestamps)
+    write_nc(dst_path=dst_path, chl=Y_resampled, lats=grid_lat, lons=grid_lon, timestamps=timestamps)
 
 
 
