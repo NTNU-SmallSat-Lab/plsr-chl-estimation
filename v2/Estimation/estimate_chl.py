@@ -243,8 +243,14 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         plt.close()
 
 
-    lats = satobj.latitudes_indirect
-    lons = satobj.longitudes_indirect
+    try:
+        lats = satobj.latitudes_indirect
+        lons = satobj.longitudes_indirect
+    except Exception as ex:
+        print(ex)
+        lats = satobj.latitudes
+        lons = satobj.longitudes
+        
     spatial_dimensions = satobj.spatial_dimensions
     
     full_path = os.path.join(Path(l1a_nc_path).parent, "processing-temp")
