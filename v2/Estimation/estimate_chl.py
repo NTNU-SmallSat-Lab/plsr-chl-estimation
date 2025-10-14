@@ -167,8 +167,9 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     satobj = Hypso(path=nc_file, verbose=True)
 
+    force_reproc = True
 
-    if not os.path.isfile(satobj.l1d_nc_file):
+    if not os.path.isfile(satobj.l1d_nc_file) or force_reproc:
 
         #print(satobj.nc_attrs['target_latitude'])
         #print(satobj.nc_attrs['target_longitude'])
@@ -250,7 +251,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         print(ex)
         lats = satobj.latitudes
         lons = satobj.longitudes
-        
+
     spatial_dimensions = satobj.spatial_dimensions
     
     full_path = os.path.join(Path(l1a_nc_path).parent, "processing-temp")
