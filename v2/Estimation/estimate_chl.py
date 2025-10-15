@@ -27,7 +27,7 @@ datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
 chl_dir = Path("/home/_shared/ARIEL/PLSR/chlorophyll")
 chl_dir.mkdir(parents=True, exist_ok=True)
 
-model_path = os.path.join(datasets_dir, "pls_model_c" + str(10) + ".pkl")
+model_path = os.path.join(datasets_dir, "pls_model_c" + str(16) + ".pkl")
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
