@@ -61,13 +61,17 @@ for entry in os.listdir(base_dir):
             # Read variables
             lats = ncfile.variables["lat"][:, :]
             lons = ncfile.variables["lon"][:, :]
-            hypso_mask = ncfile.variables["water"][:, :]
+            
+            hypso_land_mask = ncfile.variables["land"][:, :].astype(bool)
+            hypso_cloud_mask = ncfile.variables["cloud"][:, :].astype(bool)
+            
+            #hypso_mask = ncfile.variables["water"][:, :]
 
-            hypso_mask = hypso_mask.astype(bool)
+            hypso_mask = hypso_land_mask | hypso_cloud_mask
 
-            hypso_mask = ~hypso_mask
+            #hypso_mask = ~hypso_mask
 
-            footprint = disk(10) # pixel extent enlargment
+            footprint = disk(16) # pixel extent enlargment
             hypso_mask = ndimage.binary_dilation(hypso_mask, structure=footprint)
 
 
