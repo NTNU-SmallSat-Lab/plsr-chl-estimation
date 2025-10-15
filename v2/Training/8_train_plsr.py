@@ -48,23 +48,34 @@ with h5py.File(dataset_file, 'r') as h5f:
     print(f"X shape: {X.shape}")
     print(f"Y shape: {Y.shape}")
 
+for components in [4, 8, 16, 32]:
 
-print("Running PLS with " + str(components) + " components.")
+    print("Running PLS with " + str(components) + " components.")
 
-pls = PLSRegression(n_components=components, max_iter=500)
-scoring = ['explained_variance', 'r2', 'neg_mean_squared_error', 'neg_root_mean_squared_error']
-cv = KFold(n_splits=5, shuffle=True)
-scores = cross_validate(pls, X, Y, cv=cv, scoring=scoring, return_indices=True, verbose=1)
+    pls = PLSRegression(n_components=components, max_iter=500)
+    scoring = ['explained_variance', 'r2', 'neg_mean_squared_error', 'neg_root_mean_squared_error']
+    cv = KFold(n_splits=5, shuffle=True)
+    scores = cross_validate(pls, X, Y, cv=cv, scoring=scoring, return_indices=True, verbose=1)
 
-for key in scores.keys():
-    print(key)
-    print(scores[key])
+    for key in scores.keys():
+        print(key)
+        print(scores[key])
 
-pls.fit(X,Y)
-pls_model_path = os.path.join(datasets_dir, "pls_model_c" + str(components) + ".pkl")
 
-with open(pls_model_path, 'wb') as file:
-    pickle.dump(pls, file)
+    # Write scores to a text file
+    score_file_path = os.path.join(datasets_dir, f"pls_scores_c{components}.txt")
+    with open(score_file_path, 'w') as f:
+        f.write(f"Scores for PLS with {components} components:\n\n")
+        for key in scores:
+            f.write(f"{key}:\n{scores[key]}\n\n")
+
+
+
+    pls.fit(X,Y)
+    pls_model_path = os.path.join(datasets_dir, "pls_model_c" + str(components) + ".pkl")
+
+    with open(pls_model_path, 'wb') as file:
+        pickle.dump(pls, file)
 
 print("Done!")
 
