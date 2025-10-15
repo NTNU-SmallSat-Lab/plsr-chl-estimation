@@ -236,7 +236,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
     Y = Y.reshape(X_dims[0], X_dims[1], -1)
     Y = Y[:,:,0]
 
-    Y = np.clip(Y, 0, 20)
+    Y = np.clip(Y, 0, 10)
 
     if PRODUCE_FIGURES:
         plt.imshow(Y)

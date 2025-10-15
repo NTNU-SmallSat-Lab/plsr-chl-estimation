@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 import subprocess
 import pickle
+from scipy import ndimage
+from skimage.morphology import disk
 
 
 
@@ -77,6 +79,10 @@ for entry in os.listdir(base_dir):
 
             mask = sentinel_mask.astype(bool) | ~hypso_mask.astype(bool)
 
+            footprint = disk(10) # 7 is pixel extent enlargment
+            dilated_nan_mask = ndimage.binary_dilation(mask, structure=footprint)
+
+
             X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
             Y = np.where(~mask, sentinel_chl, np.nan)
 
@@ -92,7 +98,7 @@ for entry in os.listdir(base_dir):
             X = np.clip(X, 0, 1)
 
             Y = 10**Y
-            Y = np.clip(Y, 0, 20)
+            Y = np.clip(Y, 0, 10)
             
 
             plt.imshow(X[:,:,40])
