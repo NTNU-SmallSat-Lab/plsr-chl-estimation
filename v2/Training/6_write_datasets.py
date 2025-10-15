@@ -89,7 +89,7 @@ for entry in os.listdir(base_dir):
 
 
             footprint = disk(16) # pixel extent enlargment
-            hypso_mask = ndimage.binary_dilation(mask, structure=footprint)
+            mask = ndimage.binary_dilation(mask, structure=footprint)
 
 
             plt.imshow(mask)
