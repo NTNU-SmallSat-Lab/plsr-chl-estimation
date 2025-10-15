@@ -69,6 +69,10 @@ for entry in os.listdir(base_dir):
             hypso_mask = ndimage.binary_dilation(hypso_mask, structure=footprint)
 
 
+            plt.imshow(hypso_mask)
+            plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_dialated_hypso_mask.png'))
+            plt.close()
+
 
 
         # Load the Sentinel data and mask
