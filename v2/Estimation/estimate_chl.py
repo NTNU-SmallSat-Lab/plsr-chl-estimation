@@ -167,7 +167,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     satobj = Hypso(path=nc_file, verbose=True)
 
-    force_reproc = True
+    force_reproc = False
 
     if not os.path.isfile(satobj.l1d_nc_file) or force_reproc:
 
