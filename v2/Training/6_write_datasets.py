@@ -63,6 +63,14 @@ for entry in os.listdir(base_dir):
             lons = ncfile.variables["lon"][:, :]
             hypso_mask = ncfile.variables["water"][:, :]
 
+            hypso_mask = ~hypso_mask
+
+            footprint = disk(10) # pixel extent enlargment
+            hypso_mask = ndimage.binary_dilation(hypso_mask, structure=footprint)
+
+
+
+
         # Load the Sentinel data and mask
         for i, sentinel_nc_path in enumerate(sentinel_nc_paths):
 
@@ -77,10 +85,7 @@ for entry in os.listdir(base_dir):
                 sentinel_chl = ncfile.variables["chl_nn"][:, :]
                 sentinel_mask = ncfile.variables["mask"][:, :]
 
-            mask = sentinel_mask.astype(bool) | ~hypso_mask.astype(bool)
-
-            footprint = disk(10) # 7 is pixel extent enlargment
-            dilated_nan_mask = ndimage.binary_dilation(mask, structure=footprint)
+            mask = sentinel_mask.astype(bool) | hypso_mask.astype(bool)
 
 
             X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
