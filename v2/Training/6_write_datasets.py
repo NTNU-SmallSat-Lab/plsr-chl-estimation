@@ -63,6 +63,8 @@ for entry in os.listdir(base_dir):
             lons = ncfile.variables["lon"][:, :]
             hypso_mask = ncfile.variables["water"][:, :]
 
+            hypso_mask = hypso_mask.astype(bool)
+
             hypso_mask = ~hypso_mask
 
             footprint = disk(10) # pixel extent enlargment
