@@ -56,8 +56,9 @@ scoring = ['explained_variance', 'r2', 'neg_mean_squared_error', 'neg_root_mean_
 cv = KFold(n_splits=5, shuffle=True)
 scores = cross_validate(pls, X, Y, cv=cv, scoring=scoring, return_indices=True, verbose=1)
 
-
-print(scores)
+for key in scores.keys():
+    print(key)
+    print(scores[key])
 
 pls.fit(X,Y)
 pls_model_path = os.path.join(datasets_dir, "pls_model_c" + str(components) + ".pkl")
