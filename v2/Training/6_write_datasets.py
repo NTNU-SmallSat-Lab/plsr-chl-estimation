@@ -69,16 +69,6 @@ for entry in os.listdir(base_dir):
 
             hypso_mask = hypso_land_mask | hypso_cloud_mask
 
-            #hypso_mask = ~hypso_mask
-
-            footprint = disk(16) # pixel extent enlargment
-            hypso_mask = ndimage.binary_dilation(hypso_mask, structure=footprint)
-
-
-            plt.imshow(hypso_mask)
-            plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_dialated_hypso_mask.png'))
-            plt.close()
-
 
 
         # Load the Sentinel data and mask
@@ -96,6 +86,16 @@ for entry in os.listdir(base_dir):
                 sentinel_mask = ncfile.variables["mask"][:, :]
 
             mask = sentinel_mask.astype(bool) | hypso_mask.astype(bool)
+
+
+            footprint = disk(16) # pixel extent enlargment
+            hypso_mask = ndimage.binary_dilation(mask, structure=footprint)
+
+
+            plt.imshow(mask)
+            plt.savefig(os.path.join(datasets_dir, satobj.capture_name + '_dialated_mask.png'))
+            plt.close()
+
 
 
             X = np.where(~mask[:, :, np.newaxis], hypso_data, np.nan)
