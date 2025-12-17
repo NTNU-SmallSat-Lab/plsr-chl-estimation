@@ -7,7 +7,7 @@ import subprocess
 base_dir = "/home/_shared/ARIEL/PLSR/captures"
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-script = os.path.join(script_dir, "2b_process_capture.py")
+script = os.path.join(script_dir, "2c_process_capture_6s.py")
 
 print(script_dir)
 
