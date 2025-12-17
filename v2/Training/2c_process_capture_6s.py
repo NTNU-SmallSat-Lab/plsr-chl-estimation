@@ -7,9 +7,9 @@ import numpy as np
 from pathlib import Path
 
 import sys
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
 
 
 from hypso import Hypso
