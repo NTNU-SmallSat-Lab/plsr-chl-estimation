@@ -137,7 +137,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         from hypso.ac import run_6sv1_atmospheric_correction
         dem_path = Path("/home/cameron/Nedlastinger/GMTED2km.tif")
 
-        luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
+        luts_dir = "/home/camerop/ARIEL/6S_HYPSO_LUTS/"
 
         cube = run_6sv1_atmospheric_correction(satobj, dem_path, use_luts=True, luts_dir=luts_dir)
 
