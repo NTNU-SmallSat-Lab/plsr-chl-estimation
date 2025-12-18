@@ -7,15 +7,20 @@ from datetime import datetime, timedelta
 from shapely.geometry import Point, Polygon
 import geopandas as gpd
 from pathlib import Path
-from hypso import Hypso
-from hypso.write import write_l1d_nc_file
 import requests
 import boto3
 from botocore.exceptions import ClientError
 
-sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
-sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
-sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
+#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
+#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
+#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
+
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
+sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
+
+from hypso import Hypso
+from hypso.write import write_l1d_nc_file
 
 def grid_to_polygon(lat_matrix, lon_matrix):
     """Convert the external points of lat/lon matrices into a Shapely polygon."""
@@ -46,7 +51,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     from datetime import datetime
     #dt = datetime.fromisoformat(satobj.nc_attrs['start_timestamp_capture'].replace("Z", ""))
 
-    dt = satobj.start_timestamp_capture
+    dt = datetime.fromisoformat(satobj.iso_time)
     print("Downloading time:")
     print(dt)
 
@@ -69,8 +74,12 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     print(download_folder)
 
 
-    grid_lats = satobj.latitudes_indirect
-    grid_lons = satobj.longitudes_indirect
+    #grid_lats = satobj.latitudes_indirect
+    #grid_lons = satobj.longitudes_indirect
+
+    grid_lats = satobj.latitudes
+    grid_lons = satobj.longitudes
+
 
     polygon = grid_to_polygon(grid_lats, grid_lons)
     gdf = gpd.GeoDataFrame({'geometry': [polygon]})
@@ -228,14 +237,14 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
 if __name__ == "__main__":
 
-    if True:
+    if False:
         if len(sys.argv) < 2 or len(sys.argv) > 2:
             print("Usage: python process_l1d_dir.py <nc_dir_path>")
             sys.exit(1)
 
         dir_path = sys.argv[1]
     else:
-        dir_path = '/home/cameron/captures_test/image61N5E_2025-04-02T10-44-29Z'
+        dir_path = '/home/cameron/Nedlastinger/image61N5E_2025-04-02T10-44-29Z'
 
     base_path = dir_path.rstrip('/')
 
