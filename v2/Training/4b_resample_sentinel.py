@@ -4,7 +4,7 @@ import os
 import sys
 import numpy as np
 from pathlib import Path
-from hypso import Hypso
+
 import glob
 from satpy import Scene
 from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
@@ -13,6 +13,16 @@ from pyresample.geometry import SwathDefinition, AreaDefinition
 import xarray as xr
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
+
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
+
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
+
+from hypso import Hypso
 
 def main(l1d_nc_path, lats_path=None, lons_path=None):
     # Check if the first file exists
@@ -27,13 +37,18 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
     satobj = Hypso(path=nc_file, verbose=True)
 
-    lats = satobj.latitudes_indirect
-    lons = satobj.longitudes_indirect
+    #lats = satobj.latitudes_indirect
+    #lons = satobj.longitudes_indirect
+
+    lats = satobj.latitudes
+    lons = satobj.longitudes
     
     # Get HYPSO DT
     from datetime import datetime
-    hypso_dt = datetime.fromisoformat(satobj.nc_attrs['timestamp_acquired'].replace("Z", ""))
-    hypso_dt = hypso_dt.replace(tzinfo=None)
+    #hypso_dt = datetime.fromisoformat(satobj.nc_attrs['timestamp_acquired'].replace("Z", ""))
+    #hypso_dt = hypso_dt.replace(tzinfo=None)
+
+    hypso_dt = datetime.fromisoformat(satobj.iso_time)
 
     full_path = os.path.join(Path(l1d_nc_path).parent, "sentinel_granules")
 
