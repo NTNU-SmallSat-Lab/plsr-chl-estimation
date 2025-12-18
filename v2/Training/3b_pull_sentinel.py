@@ -13,6 +13,10 @@ import requests
 import boto3
 from botocore.exceptions import ClientError
 
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
+
 def grid_to_polygon(lat_matrix, lon_matrix):
     """Convert the external points of lat/lon matrices into a Shapely polygon."""
     # Extract boundary points
