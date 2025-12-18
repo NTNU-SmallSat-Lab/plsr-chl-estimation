@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import sys
-import numpy as np
-from pathlib import Path
-from hypso import Hypso
 import glob
-import xarray as xr
-import matplotlib.pyplot as plt
 import pickle
 import h5py
-import numpy as np
 
 # Path to the datasets directory
 datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
