@@ -40,7 +40,11 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
     #print(satobj.nc_attrs)
 
     from datetime import datetime
-    dt = datetime.fromisoformat(satobj.nc_attrs['timestamp_acquired'].replace("Z", ""))
+    #dt = datetime.fromisoformat(satobj.nc_attrs['start_timestamp_capture'].replace("Z", ""))
+
+    dt = satobj.iso_time
+    print("Downloading time:")
+    print(dt)
 
     #print(satobj.latitudes_indirect)
     #print(satobj.longitudes_indirect)
