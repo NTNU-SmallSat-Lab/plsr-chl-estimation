@@ -19,7 +19,7 @@ from scipy import ndimage
 from skimage.morphology import disk
 
 
-from hypso import Hypso
+
 
 sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
 sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
@@ -28,6 +28,8 @@ sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
 #sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
 #sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
 #sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
+
+from hypso import Hypso
 
 # Path to the base directory
 base_dir = "/home/_shared/ARIEL/PLSR/captures"
