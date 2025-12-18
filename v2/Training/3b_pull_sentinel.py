@@ -11,13 +11,13 @@ import requests
 import boto3
 from botocore.exceptions import ClientError
 
-#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
-#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
-#sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso1_calibration')
+sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
 
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
-sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso')
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso1_calibration')
+#sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
 
 from hypso import Hypso
 from hypso.write import write_l1d_nc_file
@@ -237,7 +237,7 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
 if __name__ == "__main__":
 
-    if False:
+    if True:
         if len(sys.argv) < 2 or len(sys.argv) > 2:
             print("Usage: python process_l1d_dir.py <nc_dir_path>")
             sys.exit(1)
