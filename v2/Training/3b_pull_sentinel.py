@@ -37,12 +37,12 @@ def main(l1d_nc_path, lats_path=None, lons_path=None):
 
     satobj = Hypso(path=nc_file, verbose=True)
 
-    #print(satobj.nc_attrs)
+    print(satobj.nc_attrs)
 
     from datetime import datetime
     #dt = datetime.fromisoformat(satobj.nc_attrs['start_timestamp_capture'].replace("Z", ""))
 
-    dt = satobj.iso_time
+    dt = satobj.start_timestamp_capture
     print("Downloading time:")
     print(dt)
 
