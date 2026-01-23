@@ -32,8 +32,11 @@ sys.path.insert(0, '/home/_shared/ARIEL/hypso-package/hypso2_calibration')
 from hypso import Hypso
 
 # Path to the base directory
-base_dir = "/home/_shared/ARIEL/PLSR/captures"
-datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+#base_dir = "/home/_shared/ARIEL/PLSR/captures"
+#datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+
+base_dir = "/home/camerop/ARIEL/PLSR/captures_ocx"
+datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_ocx"
 
 os.makedirs(base_dir, exist_ok=True)
 os.makedirs(datasets_dir, exist_ok=True)
@@ -51,6 +54,7 @@ for entry in os.listdir(base_dir):
     folder_name = os.path.basename(full_path)
     l1d_nc_path = os.path.join(full_path, f"{folder_name}-l1d.nc")
     slc_nc_path = os.path.join(full_path, f"{folder_name}-slc.nc")
+    l2_6s_path = os.path.join(full_path, f"{folder_name}-l2a-6sv1.nc")
 
     pattern = os.path.join(full_path, f"{folder_name}_sentinel_chl*.nc")
     sentinel_nc_paths = glob.glob(pattern)
@@ -60,8 +64,11 @@ for entry in os.listdir(base_dir):
     try:
 
         ## Load the HYPSO data
-        satobj = Hypso(path=l1d_nc_path, verbose=True)
-        hypso_data = satobj.l1d_cube.to_numpy()
+        #satobj = Hypso(path=l1d_nc_path, verbose=True)
+        #hypso_data = satobj.l1d_cube.to_numpy()
+
+        satobj = Hypso(path=l2_6s_path, verbose=True)
+        hypso_data = satobj.l2a_cubes["6sv1"].to_numpy()
 
         # Load the HYPSO mask
         with Dataset(slc_nc_path, "r") as ncfile:
@@ -113,18 +120,15 @@ for entry in os.listdir(base_dir):
             Y = np.where(~mask, sentinel_chl, np.nan)
 
 
-
-        
-            X = X[:, :,6:-6]
-            Y = Y
+            #X = X[:, :,6:-6]
 
             #X = X[~mask][:, :,6:-6]
             #Y = Y[~mask]
 
-            X = np.clip(X, 0, 1)
+            #X = np.clip(X, 0, 1)
 
-            Y = 10**Y
-            Y = np.clip(Y, 0, 10)
+            #Y = 10**Y
+            #Y = np.clip(Y, 0, 30)
             
 
             plt.imshow(X[:,:,40])

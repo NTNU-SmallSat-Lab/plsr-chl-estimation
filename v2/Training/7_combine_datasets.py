@@ -6,7 +6,7 @@ import pickle
 import h5py
 
 # Path to the datasets directory
-datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
+datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_ocx"
 
 os.makedirs(datasets_dir, exist_ok=True)
 
