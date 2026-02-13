@@ -51,7 +51,7 @@ plt.hist(10**Y, bins=100)
 plt.savefig('Y_hist.png')
 
 #Y = 10**Y
-#Y = np.clip(Y, 0, 20)
+Y = np.clip(Y, 0, 20)
             
 
 
@@ -314,17 +314,17 @@ true_values = chl_truth
 predicted_values = chl_pred
 
 plt.figure(figsize=(6, 6))
-plt.scatter(true_values, predicted_values, c='crimson', label='Predicted vs True chlor')
+plt.scatter(true_values, predicted_values, c='crimson', label='Predicted vs True')
 
 # Plot the ideal diagonal line (perfect prediction line)
 p1 = max(max(predicted_values), max(true_values))
 p2 = min(min(predicted_values), min(true_values))
-plt.plot([p1, p2], [p1, p2], 'b-')
+plt.plot([p1, p2], [p1, p2], 'b-', label='Perfect Prediction')
 
-plt.xlabel('True chlor_a', fontsize=12)
-plt.ylabel('Predicted chlor_a', fontsize=12)
-plt.title('True chlor_a vs Predicted chlor_a Plot')
-#plt.axis('equal') # Ensures the x and y axes have the same scale
+plt.xlabel('True Values', fontsize=12)
+plt.ylabel('Predicted Values', fontsize=12)
+plt.title('True Values vs Predicted Values Plot')
+plt.axis('equal') # Ensures the x and y axes have the same scale
 plt.legend()
 plt.show()
 plt.savefig('scatter.png')

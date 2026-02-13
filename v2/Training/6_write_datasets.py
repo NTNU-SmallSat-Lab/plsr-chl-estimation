@@ -36,10 +36,15 @@ from hypso import Hypso
 #datasets_dir = "/home/_shared/ARIEL/PLSR/datasets"
 
 base_dir = "/home/camerop/ARIEL/PLSR/captures_ocx"
-datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_ocx"
+combined_datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_ocx"
+h1_datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_h1_ocx"
+h2_datasets_dir = "/home/_shared/ARIEL/PLSR/datasets_h2_ocx"
+
 
 os.makedirs(base_dir, exist_ok=True)
-os.makedirs(datasets_dir, exist_ok=True)
+os.makedirs(combined_datasets_dir, exist_ok=True)
+os.makedirs(h1_datasets_dir, exist_ok=True)
+os.makedirs(h2_datasets_dir, exist_ok=True)
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -69,6 +74,20 @@ for entry in os.listdir(base_dir):
 
         satobj = Hypso(path=l2_6s_path, verbose=True)
         hypso_data = satobj.l2a_cubes["6sv1"].to_numpy()
+
+
+
+        sensor = satobj.sensor
+
+        match sensor:
+            case "hypso1_hsi":
+                datasets_dir = h1_datasets_dir
+            case "hypso2_hsi":
+                datasets_dir = h2_datasets_dir
+            case _:
+                datasets_dir = combined_datasets_dir
+
+
 
         # Load the HYPSO mask
         with Dataset(slc_nc_path, "r") as ncfile:
